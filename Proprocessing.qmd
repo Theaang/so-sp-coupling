@@ -1,6 +1,6 @@
 ---
-title: "SO-SP Coupling and Memory Consolidation -- A Meta Analysis"
-format: pdf
+title: "SO-SP Coupling and Memory Consolidation — Effect Size Preprocessing"
+format: html
 editor: visual
 author: "Thea Wu"
 date: "2023-06-30"
@@ -32,9 +32,6 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ```
 
 ```{r}
-donnelly2022 <- shinyDigitise()
-```
-
-```{r}
-~/Desktop/SO-SP-Coupling/Paper/Figure/
+# Import graphs to shinyDigitise
+# donnelly2022 <- shinyDigitise()
 ```
