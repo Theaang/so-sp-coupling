@@ -2,8 +2,8 @@
 title: "SO-SP Coupling and Memory Consolidation — Effect Size Preprocessing"
 format: html
 editor: visual
-author: "Thea Wu"
-date: "2023-06-30"
+author: "Author"
+date: "2023-07-28"
 date-format: iso
 toc: true
 ---
