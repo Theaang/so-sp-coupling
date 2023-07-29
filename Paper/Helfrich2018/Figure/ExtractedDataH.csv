@@ -1,0 +1,5 @@
+"","filename","variable","group_id","mean","sd","n","r","se","error_type","plot_type"
+"1","Helfrich2018strength.png","Coupling Strength","Old Adults",0.227530864197531,0.135594930234498,30,0.0250396069744841,0.0247561339909245,"sd","scatterplot"
+"2","Helfrich2018strength.png","Memory Retention","Old Adults",-0.569597069597069,0.301441001218602,30,0.0250396069744841,0.0550353453747901,"sd","scatterplot"
+"3","Helfrich2018strength.png","Coupling Strength","Young Adults",0.276886145404664,0.10780925134093,18,0.314355059997008,0.0254108842326056,"sd","scatterplot"
+"4","Helfrich2018strength.png","Memory Retention","Young Adults",-0.251678876678877,0.228554138888982,18,0.314355059997008,0.0538707271588837,"sd","scatterplot"

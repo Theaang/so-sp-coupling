@@ -26,6 +26,8 @@ library(ICC)
 library(wildmeta)
 library(future)
 library(shinyDigitise)
+library(CircStats)
+library(Directional)
 options(digits = 4)
 knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
                       tidy=FALSE, size="small")
@@ -33,5 +35,22 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 
 ```{r}
 # Import graphs to shinyDigitise
-# donnelly2022 <- shinyDigitise()
+#donnelly2022 <- shinyDigitise()
+#helfrich2018 <- shinyDigitise("~/Desktop/SO-SP-Coupling/so-sp-coupling/Paper/Helfrich2018/Figure/")
+```
+
+```{r}
+# Import source data
+Schreiner2021data <- read_csv("~/Desktop/SO-SP-Coupling/so-sp-coupling/Paper/Schreiner2021/Sourcedata/source-data-preprocessed.csv", show_col_types = FALSE)
+#view(Schreiner2021data)
+```
+
+```{r}
+#| warning: false
+#| message: false
+# Calculate the circular linear correlation
+circlin.cor <- circlin.cor(Schreiner2021data$phase, Schreiner2021data$retention, rads = TRUE)
+R_squared <- circlin.cor[, 1]
+Pearsons_r <- sqrt(R_squared)
+data.frame(Pearsons_r, R_squared, row.names = NULL) 
 ```
