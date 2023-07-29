@@ -9,8 +9,9 @@ toc: true
 ---
 
 ```{r}
+#| warning: false
+#| message: false
 #| label: setup
-#| include: false
 library(mosaic)
 library(tidyverse)
 library(knitr)
@@ -34,14 +35,30 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ```
 
 ```{r}
-# Import graphs to shinyDigitise
-#donnelly2022 <- shinyDigitise()
-#helfrich2018 <- shinyDigitise("~/Desktop/SO-SP-Coupling/so-sp-coupling/Paper/Helfrich2018/Figure/")
+#| warning: false
+#| message: false
+# All papers that provided source data and/or reported correlation in graphs
+# have undergone preprocess to normalize the correlation coefficient
+# After preprocessing in R, all correlation coefficients reported as pearson's
+# r were transformed to Fisher's z by the Practical Meta-Analysis Effect Size 
+# Calculator developed by Dr.Wilson
 ```
 
 ```{r}
+#| warning: false
+#| message: false
+# Import graphs to shinyDigitise
+# Could be downloaded from the Github repository
+#donnelly2022 <- shinyDigitise("~/Desktop/SO-SP-Coupling/so-sp-coupling/Paper/Donnelly2022/Figure/")
+#helfrich2018 <- shinyDigitise("~/Desktop/SO-SP-Coupling/so-sp-coupling/Paper/Helfrich2018/Figure/")
+# Processed data saved in the same folder
+```
+
+```{r}
+#| warning: false
+#| message: false
 # Import source data
-Schreiner2021data <- read_csv("~/Desktop/SO-SP-Coupling/so-sp-coupling/Paper/Schreiner2021/Sourcedata/source-data-preprocessed.csv", show_col_types = FALSE)
+Schreiner2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Schreiner2021/Sourcedata/source-data-preprocessed.csv", show_col_types = FALSE)
 #view(Schreiner2021data)
 ```
 
@@ -49,8 +66,41 @@ Schreiner2021data <- read_csv("~/Desktop/SO-SP-Coupling/so-sp-coupling/Paper/Sch
 #| warning: false
 #| message: false
 # Calculate the circular linear correlation
-circlin.cor <- circlin.cor(Schreiner2021data$phase, Schreiner2021data$retention, rads = TRUE)
+circlin.cor <- circlin.cor(Schreiner2021$phase, Schreiner2021$retention, rads = TRUE)
 R_squared <- circlin.cor[, 1]
 Pearsons_r <- sqrt(R_squared)
-data.frame(Pearsons_r, R_squared, row.names = NULL) 
+data.frame(Pearsons_r, R_squared, row.names = NULL)
+```
+
+```{r}
+#| include: false
+# knitr::kable(result, format = "markdown")
+```
+
+```{r}
+#| warning: false
+#| message: false
+# Calculate the coupling percentage
+Schreiner2021 <- Schreiner2021 |>
+  mutate(
+    spavg = (spobjects + spscenes)/2,
+    cpavg = (cpobjects + cpscenes)/2,
+    soavg = (soobjects + soscenes)/2,
+    spsopct = cpavg/spavg,
+    sosppct = cpavg/soavg)
+```
+
+```{r}
+#| warning: false
+#| message: false
+# Calculate summary statistics for the coupling percentage
+favstats(~ spsopct, data = Schreiner2021)
+favstats(~ sosppct, data = Schreiner2021)
+# Test the normality condition for further interpretation
+shapiro.test(Schreiner2021$spsopct)
+shapiro.test(Schreiner2021$sosppct)
+# Calculate the linear correlation between SO coupled SP and memory retention
+cor(spsopct ~ retention, use = "complete", data = Schreiner2021)
+# Calculate the linear correlation between SP coupled SO and memory retention
+cor(sosppct ~ retention, use = "complete", data = Schreiner2021)
 ```
