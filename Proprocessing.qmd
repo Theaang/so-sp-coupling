@@ -46,8 +46,56 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ```
 
 ```{r}
+## Setting functions for the effect size calculation
+## Function for calculating the circular linear correlation
+circular_cor <- function(x, y, rads = TRUE) {
+  circlin.cor <- circlin.cor(x, y, rads = rads)
+  R_squared <- circlin.cor[, 1]
+  Pearsons_r <- sqrt(R_squared)
+  return(data.frame(Pearsons_r = Pearsons_r, R_squared = R_squared))
+}
+```
+
+```{r}
+## Function for detecting and removing outliers
+  # Detect inputs
+remove_outliers <- function(sleepchar, scale_columns, memory = NULL) {
+  if (!is.null(memory) && length(scale_columns) > 0 && !all(scale_columns %in% colnames(sleepchar))) {
+    scale_columns <- which(names(sleepchar) %in% scale_columns)
+  }
+
+  # Detect rows to remove
+  rows_rem <- which(rowSums(abs(scale(sleepchar[, scale_columns])) > 3) > 0)
+  print(paste("Number of rows removed:", length(rows_rem)))
+
+  if (length(rows_rem) > 0) {
+    sleepchar_rem <- sleepchar[-rows_rem, ]
+
+  # Detect corrisponding rows in the memory table (if have) to remove
+    if (!is.null(memory)) {
+      memory_rem <- memory[-rows_rem, ]
+      print("Rows removed in memory.")
+      return(list(sleepchar_rem = sleepchar_rem, memory_rem = memory_rem))
+    }
+  } else {
+    sleepchar_rem <- sleepchar
+    
+    if (!is.null(memory)) {
+      print("No rows to remove in memory.")
+      memory_rem <- memory
+      return(list(memory_rem = memory))
+    }
+  }
+
+  return(sleepchar_rem)
+}
+save(circular_cor, remove_outliers, file = "preprocessing_fun.RData")
+```
+
+```{r}
 #| warning: false
 #| message: false
+## Begin the scatterplot analysis for estimating effect sizes
 ## Import graphs to shinyDigitise
 ## Could be downloaded from the Github repository
 ## Donnelly2022 <- shinyDigitise("~/Desktop/SO-SP-Coupling/so-sp-coupling/Paper/Donnelly2022/Figure/")
@@ -58,6 +106,7 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ```{r}
 #| warning: false
 #| message: false
+## Begin the calculation of effect sizes by preprocessed data
 ## Import source data from Schreiner 2021
 Schreiner2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Schreiner2021/Sourcedata/source-data-preprocessed.csv", show_col_types = FALSE)
 ## view(Schreiner2021)
@@ -67,10 +116,9 @@ Schreiner2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupl
 #| warning: false
 #| message: false
 ## Calculate the circular linear correlation
-circlin.cor <- circlin.cor(Schreiner2021$phase, Schreiner2021$retention, rads = TRUE)
-R_squared <- circlin.cor[, 1]
-Pearsons_r <- sqrt(R_squared)
-data.frame(Pearsons_r, R_squared, row.names = NULL)
+sch_phase <- circular_cor(Schreiner2021$phase, Schreiner2021$retention)
+rownames(sch_phase) <- NULL
+print(sch_phase)
 ```
 
 ```{r}
@@ -88,23 +136,31 @@ Schreiner2021 <- Schreiner2021 |>
     cpavg = (cpobjects + cpscenes)/2,
     soavg = (soobjects + soscenes)/2,
     spsopct = cpavg/spavg,
-    sosppct = cpavg/soavg)|>
-  filter(!(abs(scale(spsopct)) > 3 | abs(scale(sosppct)) > 3))
+    sosppct = cpavg/soavg)
+Schreiner2021_rem <- remove_outliers(Schreiner2021, scale_columns = c("spsopct", "sosppct"))
 ```
 
 ```{r}
 #| warning: false
 #| message: false
 ## Calculate summary statistics for the coupling percentage
-favstats(~ spsopct, data = Schreiner2021)
-favstats(~ sosppct, data = Schreiner2021)
+favstats(~ spsopct, data = Schreiner2021_rem)
+favstats(~ sosppct, data = Schreiner2021_rem)
 ## Test the normality condition for further interpretation
-shapiro.test(Schreiner2021$spsopct)
-shapiro.test(Schreiner2021$sosppct)
+shapiro.test(Schreiner2021_rem$spsopct)
+shapiro.test(Schreiner2021_rem$sosppct)
 ## Calculate the linear correlation between SO coupled SP and memory retention
-cor(spsopct ~ retention, use = "complete", data = Schreiner2021)
+cor(spsopct ~ retention, use = "complete", data = Schreiner2021_rem)
 ## Calculate the linear correlation between SP coupled SO and memory retention
-cor(sosppct ~ retention, use = "complete", data = Schreiner2021)
+cor(sosppct ~ retention, use = "complete", data = Schreiner2021_rem)
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
 ```
 
 ```{r}
@@ -121,12 +177,13 @@ Denis2021a <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling
 ## Filter out the stress group and remove outlier(s) for coupling strength
 Denis2021a_str <- Denis2021a |>
   dplyr::select(cond, neu_hit_fa:neg_hit_fa, n3_cp_str_all)|>
-  filter(cond == 2, !(abs(scale(as.vector(n3_cp_str_all))) > 3))|>
+  filter(cond == 2)|>
   mutate(avg_hit_fa = (neu_hit_fa*100 + emo_hit_fa*200)/300)
+Denis2021a_str_rem <- remove_outliers(Denis2021a_str, scale_columns = "n3_cp_str_all")
 ## Calculate summary statistics for the coupling percentage
-favstats(~ n3_cp_str_all, data = Denis2021a_str)
+favstats(~ n3_cp_str_all, data = Denis2021a_str_rem)
 ## Test the normality condition for further interpretation
-shapiro.test(Denis2021a_str$n3_cp_str_all)
+shapiro.test(Denis2021a_str_rem$n3_cp_str_all)
 ## Note: The distribution of coupling strength data deviates significantly (p < 0.02)
 ## from the normal distribution
 ```
@@ -135,12 +192,12 @@ shapiro.test(Denis2021a_str$n3_cp_str_all)
 #| warning: false
 #| message: false
 ## Calculate the effect size for each emotional condition
-cor(neu_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str)
-cor(emo_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str)
-cor(pos_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str)
-cor(neg_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str)
+cor(neu_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
+cor(emo_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
+cor(pos_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
+cor(neg_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
 ## Calculate the weighted effect size for all conditions
-avg_cor_str <- cor(avg_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str)
+avg_cor_str <- cor(avg_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
 avg_cor_str
 ```
 
@@ -150,22 +207,23 @@ avg_cor_str
 ## Filter out the stress group and remove outlier(s) for coupling percentage
 Denis2021a_per <- Denis2021a |>
   dplyr::select(cond, neu_hit_fa:neg_hit_fa, n3_cp_per_all)|>
-  filter(cond == 2, !(abs(scale(as.vector(n3_cp_per_all))) > 3))|>
+  filter(cond == 2)|>
   mutate(avg_hit_fa = (neu_hit_fa*100 + emo_hit_fa*200)/300)
+Denis2021a_per_rem <- remove_outliers(Denis2021a_per, scale_columns = "n3_cp_per_all")
 ## Calculate summary statistics for the coupling percentage
-favstats(~ n3_cp_per_all, data = Denis2021a_per)
+favstats(~ n3_cp_per_all, data = Denis2021a_per_rem)
 ## Test the normality condition for further interpretation
-shapiro.test(Denis2021a_per$n3_cp_per_all)
+shapiro.test(Denis2021a_per_rem$n3_cp_per_all)
 ```
 
 ```{r}
 #| warning: false
 #| message: false
 ## Calculate the effect size for each emotional condition
-cor(neu_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per)
-cor(emo_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per)
-cor(pos_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per)
-cor(neg_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per)
+cor(neu_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per_rem)
+cor(emo_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per_rem)
+cor(pos_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per_rem)
+cor(neg_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per_rem)
 ## Calculate the weighted effect size for all conditions
 avg_cor_per <- cor(avg_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per)
 avg_cor_per
@@ -187,4 +245,131 @@ avg_cor_per
 #>        y = "Frequency") +
 #>   geom_vline(xintercept = mean(bootstrap_result), color = "black", linetype = "dashed") +
 #>   geom_vline(xintercept = avg_cor, color = "black", linetype = "dashed")
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Import source data from Hahn 2020
+Hahn_beh <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/behaviorals.csv", show_col_types = FALSE)
+Hahn_chphase <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/child_phase.csv", show_col_types = FALSE)
+Hahn_champ <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/child_amplitude.csv", show_col_types = FALSE)
+Hahn_chstr <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/child_strength.csv", show_col_types = FALSE)
+Hahn_adphase <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/adolescent_phase.csv", show_col_types = FALSE)
+Hahn_adamp <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/adolescent_amplitude.csv", show_col_types = FALSE)
+Hahn_adstr <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/adolescent_strength.csv", show_col_types = FALSE)
+Hahn_pct <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/percentage.csv", show_col_types = FALSE)
+#> view(Hahn_beh)
+#> view(Hahn_chphase)
+#> view(Hahn_champ)
+#> view(Hahn_chstr)
+#> view(Hahn_adphase)
+#> view(Hahn_adamp)
+#> view(Hahn_adstr)
+#> view(Hahn_pct)
+```
+
+```{r}
+## Coupling Phase Preprocessing
+## Calculate the mean preferred phase in each specified channel location (F,C,P&O) for both groups
+Hahn_chphase <- Hahn_chphase |>
+  rowwise() |>
+  mutate(
+    Favg = mean(c(F3, Fz, F4)),
+    Cavg = mean(c(C3, Cz, C4)),
+    POavg = mean(c(P3, Pz, P4, O1, O2)))
+#> view(Hahn_chphase)
+Hahn_adphase <- Hahn_adphase |>
+  rowwise() |>
+  mutate(
+    Favg = mean(c(F3, Fz, F4)),
+    Cavg = mean(c(C3, Cz, C4)),
+    POavg = mean(c(P3, Pz, P4, O1, O2)))
+#> view(Hahn_adphase)
+```
+
+```{r}
+## Calculate the circular linear correlation for the child group
+variables <- c("Favg", "Cavg", "POavg")
+effect_sizech <- data.frame()
+for (var in variables) {
+  effect_varch <- circular_cor(Hahn_chphase[[var]], Hahn_beh$ch_diff)
+  effect_sizech <- rbind(effect_sizech, effect_varch)
+}
+rownames(effect_sizech) <- c("Frontal", "Central", "Parietal and Occipital")
+print(effect_sizech)
+```
+
+```{r}
+## Calculate the circular linear correlation for the adolescent group
+variables <- c("Favg", "Cavg", "POavg")
+effect_sizead <- data.frame()
+for (var in variables) {
+  effect_varad <- circular_cor(Hahn_adphase[[var]], Hahn_beh$ad_diff)
+  effect_sizead <- rbind(effect_sizead, effect_varad)
+}
+rownames(effect_sizead) <- c("Frontal", "Central", "Parietal and Occipital")
+print(effect_sizead)
+```
+
+```{r}
+## Coupling Strength Preprocessing
+## Calculate the mean strength in each specified channel location (F,C,P&O) for both groups
+Hahn_chstr <- Hahn_chstr |>
+  rowwise() |>
+  mutate(
+    Favg = mean(c(F3, Fz, F4)),
+    Cavg = mean(c(C3, Cz, C4)),
+    POavg = mean(c(P3, Pz, P4, O1, O2))) |>
+  dplyr::select(Favg, Cavg, POavg)
+#> view(Hahn_chstr)
+Hahn_adstr <- Hahn_adstr |>
+  rowwise() |>
+  mutate(
+    Favg = mean(c(F3, Fz, F4)),
+    Cavg = mean(c(C3, Cz, C4)),
+    POavg = mean(c(P3, Pz, P4, O1, O2))) |>
+  dplyr::select(Favg, Cavg, POavg)
+#> view(Hahn_adstr)
+```
+
+```{r}
+## Detect and Remove outlier(s)
+chresult <- remove_outliers(Hahn_chstr, scale_columns = c("Favg", "Cavg", "POavg"), memory = Hahn_beh)
+Hahn_chstr_rem <- chresult$sleepchar_rem
+Hahn_chbeh_rem <- chresult$memory_rem
+#> view(Hahn_chstr_rem)
+#> view(Hahn_chbeh_rem)
+adresult <- remove_outliers(Hahn_adstr, scale_columns = c("Favg", "Cavg", "POavg"), memory = Hahn_beh)
+Hahn_adstr_rem <- adresult$sleepchar_rem
+Hahn_adbeh_rem <- adresult$memory_rem
+#> view(Hahn_adstr_rem)
+#> view(Hahn_adbeh_rem)
+```
+
+```{r}
+# Calculate correlation coefficients for the child group in each channel location
+cor_ch <- c(
+  Frontal = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_chstr_rem$Favg, use = "complete"),
+  Central = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_chstr_rem$Cavg, use = "complete"),
+  PO = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_chstr_rem$POavg, use = "complete")
+)
+
+# Calculate correlation coefficients for the adolescent group in each channel location
+cor_ad <- c(
+  Frontal = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adstr_rem$Favg, use = "complete"),
+  Central = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adstr_rem$Cavg, use = "complete"),
+  PO = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adstr_rem$POavg, use = "complete")
+)
+
+# Create the table
+t(data.frame(Child = cor_ch, Adolescent = cor_ad))
 ```
