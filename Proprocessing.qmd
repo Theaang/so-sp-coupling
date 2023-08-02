@@ -58,9 +58,9 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ```{r}
 #| warning: false
 #| message: false
-## Import source data
+## Import source data from Schreiner 2021
 Schreiner2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Schreiner2021/Sourcedata/source-data-preprocessed.csv", show_col_types = FALSE)
-## view(Schreiner2021data)
+## view(Schreiner2021)
 ```
 
 ```{r}
@@ -81,14 +81,15 @@ data.frame(Pearsons_r, R_squared, row.names = NULL)
 ```{r}
 #| warning: false
 #| message: false
-## Calculate the coupling percentage
+## Calculate the coupling percentage and remove outlier(s)
 Schreiner2021 <- Schreiner2021 |>
   mutate(
     spavg = (spobjects + spscenes)/2,
     cpavg = (cpobjects + cpscenes)/2,
     soavg = (soobjects + soscenes)/2,
     spsopct = cpavg/spavg,
-    sosppct = cpavg/soavg)
+    sosppct = cpavg/soavg)|>
+  filter(!(abs(scale(spsopct)) > 3 | abs(scale(sosppct)) > 3))
 ```
 
 ```{r}
@@ -104,4 +105,86 @@ shapiro.test(Schreiner2021$sosppct)
 cor(spsopct ~ retention, use = "complete", data = Schreiner2021)
 ## Calculate the linear correlation between SP coupled SO and memory retention
 cor(sosppct ~ retention, use = "complete", data = Schreiner2021)
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Import source data from Denis 2021a
+Denis2021a <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Denis2021a/Sourcedata/sleepldf_so_ss_data.csv", show_col_types = FALSE)
+## view(Denis2021a)
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Filter out the stress group and remove outlier(s) for coupling strength
+Denis2021a_str <- Denis2021a |>
+  dplyr::select(cond, neu_hit_fa:neg_hit_fa, n3_cp_str_all)|>
+  filter(cond == 2, !(abs(scale(as.vector(n3_cp_str_all))) > 3))|>
+  mutate(avg_hit_fa = (neu_hit_fa*100 + emo_hit_fa*200)/300)
+## Calculate summary statistics for the coupling percentage
+favstats(~ n3_cp_str_all, data = Denis2021a_str)
+## Test the normality condition for further interpretation
+shapiro.test(Denis2021a_str$n3_cp_str_all)
+## Note: The distribution of coupling strength data deviates significantly (p < 0.02)
+## from the normal distribution
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Calculate the effect size for each emotional condition
+cor(neu_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str)
+cor(emo_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str)
+cor(pos_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str)
+cor(neg_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str)
+## Calculate the weighted effect size for all conditions
+avg_cor_str <- cor(avg_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str)
+avg_cor_str
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Filter out the stress group and remove outlier(s) for coupling percentage
+Denis2021a_per <- Denis2021a |>
+  dplyr::select(cond, neu_hit_fa:neg_hit_fa, n3_cp_per_all)|>
+  filter(cond == 2, !(abs(scale(as.vector(n3_cp_per_all))) > 3))|>
+  mutate(avg_hit_fa = (neu_hit_fa*100 + emo_hit_fa*200)/300)
+## Calculate summary statistics for the coupling percentage
+favstats(~ n3_cp_per_all, data = Denis2021a_per)
+## Test the normality condition for further interpretation
+shapiro.test(Denis2021a_per$n3_cp_per_all)
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Calculate the effect size for each emotional condition
+cor(neu_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per)
+cor(emo_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per)
+cor(pos_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per)
+cor(neg_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per)
+## Calculate the weighted effect size for all conditions
+avg_cor_per <- cor(avg_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per)
+avg_cor_per
+```
+
+```{r}
+## Test robustness by the bootstrap method for nonnormality data
+#> num_sim <- 10000
+#> set.seed(1821)
+#> bootstrap_result <- do(num_sim) * 
+#>   cor(avg_hit_fa ~ n3_cp_str_all, data = resample(Denis2021a_str))
+#> summary(bootstrap_result)
+
+#> bootstrap_result <- as.numeric(bootstrap_result$cor)
+#> ggplot(data.frame(x = bootstrap_result), aes(x = x)) +
+#>   geom_histogram(binwidth = 0.05, color = "black", fill = "lightblue") +
+#>   labs(title = "Histogram of Bootstrap Results",
+#>        x = "Bootstrap Results (Pearson's r correlation)",
+#>        y = "Frequency") +
+#>   geom_vline(xintercept = mean(bootstrap_result), color = "black", linetype = "dashed") +
+#>   geom_vline(xintercept = avg_cor, color = "black", linetype = "dashed")
 ```
