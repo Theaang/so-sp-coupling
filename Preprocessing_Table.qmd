@@ -5,11 +5,6 @@ editor: visual
 author: "2023-08-02"
 date-format: iso
 toc: true
-geometry:
-      - top=25.4mm
-      - left=25.4mm
-      - right=25.4mm
-      - bottom=25.4mm
 ---
 
 ```{r}
@@ -43,8 +38,8 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ```{r}
 #| warning: false
 #| message: false
-## All codes presented here is copied from the "Preprocessing.qmd" file to
-## extract all the tables and eliminate any code snippets and comments
+## All hidden codes in this file is copied from the "Preprocessing.qmd" file
+## to extract all the tables and eliminate any code snippets and comments
 ```
 
 ```{r}
@@ -468,8 +463,8 @@ cor_ch <- c(
 
 # Calculate correlation coefficients for the adolescent group in each sleep stage
 cor_ad <- c(
-  N2 = cor(Hahn_chbeh_rem$ad_diff ~ Hahn_adpct_rem$ad_n2, use = "complete"),
-  N3 = cor(Hahn_chbeh_rem$ad_diff ~ Hahn_adpct_rem$ad_n3, use = "complete")
+  N2 = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adpct_rem$ad_n2, use = "complete"),
+  N3 = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adpct_rem$ad_n3, use = "complete")
 )
 
 # Create the table

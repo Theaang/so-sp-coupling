@@ -48,12 +48,13 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ## Setting Functions
 
 ```{r}
-## Setting functions for the effect size calculation
+## Setting functions for the effect size calculation and table output
 ## Function for calculating the circular linear correlation
 circular_cor <- function(x, y, rads = TRUE) {
   circlin.cor <- circlin.cor(x, y, rads = rads)
   R_squared <- circlin.cor[, 1]
-  Pearsons_r <- sqrt(R_squared)
+  Pearsons_r <- sqrt(R_squared) 
+  ## Applicable based on the characteristic of the simple linear regression
   return(data.frame(Pearsons_r = Pearsons_r, R_squared = R_squared))
 }
 ```
@@ -62,31 +63,18 @@ circular_cor <- function(x, y, rads = TRUE) {
 ## Function for detecting and removing outliers
   # Detect inputs
 remove_outliers <- function(sleepchar, scale_columns, memory = NULL) {
-  if (!is.null(memory) && length(scale_columns) > 0 && !all(scale_columns %in% colnames(sleepchar))) {
-    scale_columns <- which(names(sleepchar) %in% scale_columns)
-  }
 
-  # Detect rows to remove
+  # Detect rows to remove in the sleep data matrix
   rows_rem <- which(rowSums(abs(scale(sleepchar[, scale_columns])) > 3) > 0)
-  print(paste("Number of rows removed:", length(rows_rem)))
-
-  if (length(rows_rem) > 0) {
-    sleepchar_rem <- sleepchar[-rows_rem, ]
-  } else {
-    sleepchar_rem <- sleepchar
-  }
+  print(paste(length(rows_rem), "rows removed:", paste(rows_rem, collapse = ", ")))
+  sleepchar_rem <- if (length(rows_rem) > 0) sleepchar[-rows_rem, ] else sleepchar
   
+  # Detect rows to remove in the memory data matrix
   if (!is.null(memory)) {
-    if (length(rows_rem) > 0) {
-      memory_rem <- memory[-rows_rem, ]
-      print("Rows removed in memory.")
-    } else {
-      memory_rem <- memory
-      print("No rows to remove in memory.")
-    }
+    memory_rem <- memory |> filter(!row_number() %in% rows_rem)
+    print("Corrisponding rows removed in the memory matrix.")
     return(list(sleepchar_rem = sleepchar_rem, memory_rem = memory_rem))
   }
-
   return(sleepchar_rem)
 }
 ```
@@ -140,7 +128,7 @@ Schreiner2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupl
 #| message: false
 ## Calculate the circular linear correlation
 sch_phase <- circular_cor(Schreiner2021$phase, Schreiner2021$retention)
-knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memory Pearson's r Correlation Table")
+knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memory Pearson's r Correlation Table",row.names = FALSE)
 ```
 
 ```{r}
@@ -438,12 +426,16 @@ cor_ch <- c(
 
 # Calculate correlation coefficients for the adolescent group in each sleep stage
 cor_ad <- c(
-  N2 = cor(Hahn_chbeh_rem$ad_diff ~ Hahn_adpct_rem$ad_n2, use = "complete"),
-  N3 = cor(Hahn_chbeh_rem$ad_diff ~ Hahn_adpct_rem$ad_n3, use = "complete")
+  N2 = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adpct_rem$ad_n2, use = "complete"),
+  N3 = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adpct_rem$ad_n3, use = "complete")
 )
 
 # Create the table
 cortable("Hahn", 4, Child = cor_ch, Adolescent = cor_ad)
+```
+
+```{r}
+circular_cor(Hahn_adphase$Favg, Hahn_beh$ad_diff, rads = TRUE)
 ```
 
 ```{r}
