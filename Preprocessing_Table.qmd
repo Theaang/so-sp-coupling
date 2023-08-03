@@ -1,17 +1,22 @@
 ---
-title: "SO-SP Coupling and Memory Consolidation — Effect Size Preprocessing"
+title: "Effect Size Preprocessing Tables"
 format: pdf
 editor: visual
-author: "Author"
-date: "2023-07-28"
+author: "2023-08-02"
 date-format: iso
 toc: true
+geometry:
+      - top=25.4mm
+      - left=25.4mm
+      - right=25.4mm
+      - bottom=25.4mm
 ---
 
 ```{r}
 #| warning: false
 #| message: false
 #| label: setup
+#| echo: false
 ## Load required packages
 library(mosaic)
 library(tidyverse)
@@ -38,16 +43,12 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ```{r}
 #| warning: false
 #| message: false
-## All papers that provided source data and/or reported correlation in graphs
-## have undergone preprocess to normalize the correlation coefficient
-## After preprocessing in R, all correlation coefficients reported as pearson's
-## r were transformed to Fisher's z by the Practical Meta-Analysis Effect Size 
-## Calculator developed by Dr.Wilson
+## All codes presented here is copied from the "Preprocessing.qmd" file to
+## extract all the tables and eliminate any code snippets and comments
 ```
 
-## Setting Functions
-
 ```{r}
+#| echo: false
 ## Setting functions for the effect size calculation
 ## Function for calculating the circular linear correlation
 circular_cor <- function(x, y, rads = TRUE) {
@@ -59,6 +60,7 @@ circular_cor <- function(x, y, rads = TRUE) {
 ```
 
 ```{r}
+#| echo: false
 ## Function for detecting and removing outliers
   # Detect inputs
 remove_outliers <- function(sleepchar, scale_columns, memory = NULL) {
@@ -92,6 +94,7 @@ remove_outliers <- function(sleepchar, scale_columns, memory = NULL) {
 ```
 
 ```{r}
+#| echo: false
 ## Function for building tables for the data classification
 cortable <- function(author, cptype, flip = TRUE, ...) {
   # Combine the correlation matrices into a data frame and transpose it
@@ -108,14 +111,14 @@ cortable <- function(author, cptype, flip = TRUE, ...) {
 ```
 
 ```{r}
+#| echo: false
 save(circular_cor, remove_outliers, cortable, file = "preprocessing_fun.RData")
 ```
-
-## Donnelly2022 and Helfrich2018
 
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Begin the scatterplot analysis for estimating effect sizes
 ## Import graphs to shinyDigitise
 ## Could be downloaded from the Github repository
@@ -129,6 +132,7 @@ save(circular_cor, remove_outliers, cortable, file = "preprocessing_fun.RData")
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Begin the calculation of effect sizes by preprocessed data
 ## Import source data from Schreiner 2021
 Schreiner2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Schreiner2021/Sourcedata/source-data-preprocessed.csv", show_col_types = FALSE)
@@ -138,19 +142,21 @@ Schreiner2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupl
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Calculate the circular linear correlation
 sch_phase <- circular_cor(Schreiner2021$phase, Schreiner2021$retention)
-knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memory Pearson's r Correlation Table")
+knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memory Pearson's r Correlation Table",row.names = FALSE)
 ```
 
 ```{r}
-#| include: false
+#| echo: false
 ## knitr::kable(result, format = "markdown")
 ```
 
 ```{r}
 #| warning: false
 #| message: false
+#| include: false
 ## Calculate the coupling percentage and remove outlier(s)
 Schreiner2021 <- Schreiner2021 |>
   mutate(
@@ -165,12 +171,19 @@ Schreiner2021_rem <- remove_outliers(Schreiner2021, scale_columns = c("spsopct",
 ```{r}
 #| warning: false
 #| message: false
+#| include: false
 ## Calculate summary statistics for the coupling percentage
 favstats(~ spsopct, data = Schreiner2021_rem)
 favstats(~ sosppct, data = Schreiner2021_rem)
 ## Test the normality condition for further interpretation
 shapiro.test(Schreiner2021_rem$spsopct)
 shapiro.test(Schreiner2021_rem$sosppct)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
 ## Calculate the linear correlation between SO coupled SP and memory retention
 cor1 <- cor(spsopct ~ retention, use = "complete", data = Schreiner2021_rem)
 ## Calculate the linear correlation between SP coupled SO and memory retention
@@ -181,6 +194,7 @@ cortable("Schreiner", 4, flip = FALSE, "SPcSO" = cor1, "SOcSP" = cor2)
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Remove all unused variables
 rm(list = ls())
 load("preprocessing_fun.RData")
@@ -191,6 +205,7 @@ load("preprocessing_fun.RData")
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Import source data from Denis 2021a
 Denis2021a <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Denis2021a/Sourcedata/sleepldf_so_ss_data.csv", show_col_types = FALSE)
 ## view(Denis2021a)
@@ -199,6 +214,7 @@ Denis2021a <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling
 ```{r}
 #| warning: false
 #| message: false
+#| include: false
 ## Filter out the stress group and remove outlier(s) for coupling strength
 Denis2021a_str <- Denis2021a |>
   dplyr::select(cond, neu_hit_fa:neg_hit_fa, n3_cp_str_all)|>
@@ -216,6 +232,7 @@ shapiro.test(Denis2021a_str_rem$n3_cp_str_all)
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Calculate the effect size for each emotional condition
 cor1 <- cor(neu_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
 cor2 <- cor(emo_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
@@ -229,6 +246,7 @@ cortable("Denis", 3, flip = FALSE, "Neutral" = cor1, "Emotional" = cor2, "Positi
 ```{r}
 #| warning: false
 #| message: false
+#| include: false
 ## Filter out the stress group and remove outlier(s) for coupling percentage
 Denis2021a_per <- Denis2021a |>
   dplyr::select(cond, neu_hit_fa:neg_hit_fa, n3_cp_per_all)|>
@@ -244,6 +262,7 @@ shapiro.test(Denis2021a_per_rem$n3_cp_per_all)
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Calculate the effect size for each emotional condition
 cor1 <- cor(neu_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per_rem)
 cor2 <-cor(emo_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per_rem)
@@ -255,6 +274,7 @@ cortable("Denis", 4, flip = FALSE, "Neutral" = cor1, "Emotional" = cor2, "Positi
 ```
 
 ```{r}
+#| echo: false
 ## Test robustness by the bootstrap method for nonnormality data
 #> num_sim <- 10000
 #> set.seed(1821)
@@ -275,6 +295,7 @@ cortable("Denis", 4, flip = FALSE, "Neutral" = cor1, "Emotional" = cor2, "Positi
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Remove all unused variables
 rm(list = ls())
 load("preprocessing_fun.RData")
@@ -285,6 +306,7 @@ load("preprocessing_fun.RData")
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Import source data from Hahn 2020
 Hahn_beh <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/behaviorals.csv", show_col_types = FALSE)
 Hahn_chphase <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/child_phase.csv", show_col_types = FALSE)
@@ -307,6 +329,7 @@ Hahn_pct <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/m
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Coupling Phase Preprocessing
 ## Calculate the mean preferred phase in each specified channel location (F,C,P&O) for both groups
 Hahn_chphase <- Hahn_chphase |>
@@ -328,6 +351,7 @@ Hahn_adphase <- Hahn_adphase |>
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Calculate the circular linear correlation for the child group
 variables <- c("Favg", "Cavg", "POavg")
 effect_sizech <- data.frame()
@@ -342,6 +366,7 @@ knitr::kable(effect_sizech, format = "markdown", caption = "Hahn Child CP Phase 
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Calculate the circular linear correlation for the adolescent group
 variables <- c("Favg", "Cavg", "POavg")
 effect_sizead <- data.frame()
@@ -356,6 +381,7 @@ knitr::kable(effect_sizead, format = "markdown", caption = "Hahn Adolescent CP P
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 ## Coupling Strength Preprocessing
 ## Calculate the mean strength in each specified channel location (F,C,P&O) for both groups
 Hahn_chstr <- Hahn_chstr |>
@@ -379,6 +405,7 @@ Hahn_adstr <- Hahn_adstr |>
 ```{r}
 #| warning: false
 #| message: false
+#| include: false
 ## Detect and Remove outlier(s)
 chresult <- remove_outliers(Hahn_chstr, scale_columns = c("Favg", "Cavg", "POavg"), memory = Hahn_beh)
 Hahn_chstr_rem <- chresult$sleepchar_rem
@@ -395,6 +422,7 @@ Hahn_adbeh_rem <- adresult$memory_rem
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 # Calculate correlation coefficients for the child group in each channel location
 cor_ch <- c(
   Frontal = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_chstr_rem$Favg, use = "complete"),
@@ -416,6 +444,7 @@ cortable("Hahn", 3, flip = FALSE, Child = cor_ch, Adolescent = cor_ad)
 ```{r}
 #| warning: false
 #| message: false
+#| include: false
 ## Coupling Percentage Preprocessing
 ## Detect and Remove outlier(s)
 chpct <- remove_outliers(Hahn_pct, scale_columns = c("ch_n2", "ch_n3"), memory = Hahn_beh)
@@ -430,6 +459,7 @@ Hahn_adbeh_rem <- adpct$memory_rem
 ```{r}
 #| warning: false
 #| message: false
+#| echo: false
 # Calculate correlation coefficients for the child group in each sleep stage
 cor_ch <- c(
   N2 = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_chpct_rem$ch_n2, use = "complete"),
@@ -449,6 +479,7 @@ cortable("Hahn", 4, Child = cor_ch, Adolescent = cor_ad)
 ```{r}
 #| warning: false
 #| message: false
+#| include: false
 ## Remove all unused variables
 rm(list = ls())
 load("preprocessing_fun.RData")
