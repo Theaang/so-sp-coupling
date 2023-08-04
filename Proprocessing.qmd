@@ -82,20 +82,20 @@ remove_outliers <- function(sleepchar, scale_columns, memory = NULL) {
 ```{r}
 ## Function for building tables for the data classification
 cortable <- function(author, cptype, flip = TRUE, ...) {
-  # Combine the correlation matrices into a data frame and transpose it
+  # Combine the grouped correlation matrices into a data frame
   cor_group <- data.frame(...)
-  
   if (flip) cor_group <- t(cor_group)
   # Create the table caption
   cptype <- switch(cptype,"CP Phase", "SP Peak Amplitude", "CP Strength", "CP Percentage")
   caption <- paste(author, cptype, "and Memory Pearson's r Correlation Table")
   
-  # Generate the table calling knitr::kable
+  # Generate the table for data extraction
   knitr::kable(cor_group, format = "markdown", caption = caption)
 }
 ```
 
 ```{r}
+## Store all functions to call during the data analysis
 save(circular_cor, remove_outliers, cortable, file = "preprocessing_fun.RData")
 ```
 
