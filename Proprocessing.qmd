@@ -596,10 +596,13 @@ load("preprocessing_fun.RData")
 #| warning: false
 #| message: false
 ## Import source data from Donnelly 2022
-Donnelly_eeg <- readRDS("/Users/thea/Downloads/sleep_study_eeg_summary_data_z.rds")
-Donnelly_psdrow <- readRDS("/Users/thea/Downloads/sleep_study_beh_psych_demographic_data.rds")
+eeg_download <- "https://github.com/Theaang/so-sp-coupling/raw/main/Paper/Donnelly2022/Sourcedata/sleep_study_eeg_summary_data_z.rds"
+Donnelly_eeg <- readRDS(url(eeg_download, method="libcurl"))
+beh_download <- "https://github.com/Theaang/so-sp-coupling/raw/main/Paper/Donnelly2022/Sourcedata/sleep_study_beh_psych_demographic_data.rds"
+Donnelly_behrow <- readRDS(url(beh_download, method="libcurl"))
 #> view(Donnelly_eeg)
-#> view(Donnelly_psdrow)
+#> view(Donnelly_behrow)
+
 ## Extract all datasets from the RDS file
 Donnelly2022 <- list()
 for (i in 1:nrow(Donnelly_eeg)) {
@@ -616,11 +619,11 @@ Donnellyphase_raw <- Donnelly2022[[21]]
 ## Transform the memory data
 # Calculate the memory retention rate
 # Exclude participants from the patient group and missing values
-Donnelly_psd <- Donnelly_psdrow |>
+Donnelly_beh <- Donnelly_behrow |>
   filter(group == "Sib") |>
   mutate(retention = accC_morning - accC_evening) |>
   filter(rowSums(is.na(cur_data()[, 26:27])) == 0)
-#> view(Donnelly_psd)
+#> view(Donnelly_beh)
 ```
 
 
@@ -653,7 +656,7 @@ Donnellyphase_avg <- Donnellyphase_avg[-7,]
 variables <- c("Favg", "Cavg", "POavg")
 effect_size <- data.frame()
 for (var in variables) {
-  effect_var <- circular_cor(Donnellyphase_avg[[var]], Donnelly_psd$retention)
+  effect_var <- circular_cor(Donnellyphase_avg[[var]], Donnelly_beh$retention)
   effect_size <- rbind(effect_size, effect_var)
 }
 rownames(effect_size) <- c("Frontal", "Central", "Parietal and Occipital")
@@ -690,9 +693,9 @@ Donnellyamp_avg <- remove_outliers(Donnellyamp_avg, scale_columns = c("Favg", "C
 ```{r}
 # Calculate correlation coefficients between spindle amplitude and memory in each channel location
 cor <- c(
-  "Frontal" = cor(Donnelly_psd$retention ~ Donnellyamp_avg$Favg, use = "complete"),
-  "Central" = cor(Donnelly_psd$retention ~ Donnellyamp_avg$Cavg, use = "complete"),
-  "Parietal" = cor(Donnelly_psd$retention ~ Donnellyamp_avg$POavg, use = "complete"))
+  "Frontal" = cor(Donnelly_beh$retention ~ Donnellyamp_avg$Favg, use = "complete"),
+  "Central" = cor(Donnelly_beh$retention ~ Donnellyamp_avg$Cavg, use = "complete"),
+  "Parietal" = cor(Donnelly_beh$retention ~ Donnellyamp_avg$POavg, use = "complete"))
 
 cortable("Donnelly", 2, "Correlation" = cor)
 ```
@@ -728,9 +731,9 @@ Donnellystr_avg <- remove_outliers(Donnellystr_avg, scale_columns = c("Favg", "C
 ```{r}
 # Calculate correlation coefficients between coupling strength and memory in each channel location
 cor <- c(
-  "Frontal" = cor(Donnelly_psd$retention ~ Donnellystr_avg$Favg, use = "complete"),
-  "Central" = cor(Donnelly_psd$retention ~ Donnellystr_avg$Cavg, use = "complete"),
-  "Parietal" = cor(Donnelly_psd$retention ~ Donnellystr_avg$POavg, use = "complete"))
+  "Frontal" = cor(Donnelly_beh$retention ~ Donnellystr_avg$Favg, use = "complete"),
+  "Central" = cor(Donnelly_beh$retention ~ Donnellystr_avg$Cavg, use = "complete"),
+  "Parietal" = cor(Donnelly_beh$retention ~ Donnellystr_avg$POavg, use = "complete"))
 
 cortable("Donnelly", 3, "Correlation" = cor)
 ```
