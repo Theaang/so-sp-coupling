@@ -30,22 +30,29 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ```
 
 ```{r}
-exl <- readxl::read_excel("/Users/thea/Downloads/jopd-5-33-s2.xlsx")
+#| warning: false
+#| message: false
+psycbul <- readxl::read_excel("/Users/thea/Downloads/jopd-5-33-s2.xlsx")
 ```
 
 ```{r}
-exl_filtered <- exl |>
-  filter(Type_of_ES %in% c("Pearson's r", "Corrected Pearson's r", "Weighted Pearson's r", "Weighted corrected Pearson's r"))
-exl_filtered
+#| warning: false
+#| message: false
+psycbul_r <- psycbul |>
+  filter(grepl("Pearson's r", Type_of_ES))
 ```
 
 ```{r}
-knitr::kable(favstats(exl_filtered$tau))
+#| warning: false
+#| message: false
+knitr::kable(favstats(psycbul_r$tau))
 ```
 
 ```{r}
+#| warning: false
+#| message: false
 library(extraDistr)
-curve(dht(x, 3, 0.5), 0, 3, col = "blue", ylab = "Density", xlab = "Heterogeneity (\u03C4)", lwd = 2)
+curve(dht(x, 3, 0.5), 0, 3, col = "blue", ylab = "Density", xlab = "Heterogeneity (\u03c4)", lwd = 2)
 curve(dhcauchy(x, 0.5), 0, 3, col = "red", add = TRUE, lwd = 2)
 curve(dhcauchy(x, 0.13), 0, 3, col = "orange", add = TRUE, lwd = 2)
 curve(dhnorm(x, 0.5), 0, 3, col = "black", add = TRUE, lwd = 2)
