@@ -1,17 +1,17 @@
 ---
-title: "Effect Size Preprocessing Tables"
+title: "Effect Size Preprocessing Table"
 format: pdf
 editor: visual
-author: "2023-08-02"
+author: "Author"
+date: "2023-08-08"
 date-format: iso
-toc: true
 ---
 
 ```{r}
 #| warning: false
 #| message: false
+#| include: false
 #| label: setup
-#| echo: false
 ## Load required packages
 library(mosaic)
 library(tidyverse)
@@ -38,82 +38,74 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ```{r}
 #| warning: false
 #| message: false
-## All hidden codes in this file is copied from the "Preprocessing.qmd" file
-## to extract all the tables and eliminate any code snippets and comments
+#| include: false
+## All papers that provided source data and/or reported correlation in graphs
+## have undergone preprocess to normalize the correlation coefficient
+## After preprocessing in R, all correlation coefficients reported as pearson's
+## r were transformed to Fisher's z by the Practical Meta-Analysis Effect Size 
+## Calculator developed by Dr.Wilson
 ```
 
 ```{r}
-#| echo: false
-## Setting functions for the effect size calculation
+#| include: false
+## Setting functions for the effect size calculation and table output
 ## Function for calculating the circular linear correlation
 circular_cor <- function(x, y, rads = TRUE) {
   circlin.cor <- circlin.cor(x, y, rads = rads)
   R_squared <- circlin.cor[, 1]
-  Pearsons_r <- sqrt(R_squared)
+  Pearsons_r <- sqrt(R_squared) 
+  ## Applicable based on the characteristic of the simple linear regression
   return(data.frame(Pearsons_r = Pearsons_r, R_squared = R_squared))
 }
 ```
 
 ```{r}
-#| echo: false
+#| include: false
 ## Function for detecting and removing outliers
   # Detect inputs
 remove_outliers <- function(sleepchar, scale_columns, memory = NULL) {
-  if (!is.null(memory) && length(scale_columns) > 0 && !all(scale_columns %in% colnames(sleepchar))) {
-    scale_columns <- which(names(sleepchar) %in% scale_columns)
-  }
 
-  # Detect rows to remove
+  # Detect rows to remove in the sleep data matrix
   rows_rem <- which(rowSums(abs(scale(sleepchar[, scale_columns])) > 3) > 0)
-  print(paste("Number of rows removed:", length(rows_rem)))
-
-  if (length(rows_rem) > 0) {
-    sleepchar_rem <- sleepchar[-rows_rem, ]
-  } else {
-    sleepchar_rem <- sleepchar
-  }
+  print(paste(length(rows_rem), "rows removed:", paste(rows_rem, collapse = ", ")))
+  sleepchar_rem <- if (length(rows_rem) > 0) sleepchar[-rows_rem, ] else sleepchar
   
+  # Detect rows to remove in the memory data matrix
   if (!is.null(memory)) {
-    if (length(rows_rem) > 0) {
-      memory_rem <- memory[-rows_rem, ]
-      print("Rows removed in memory.")
-    } else {
-      memory_rem <- memory
-      print("No rows to remove in memory.")
-    }
+    memory_rem <- memory |> filter(!row_number() %in% rows_rem)
+    print("Corrisponding rows removed in the memory matrix.")
     return(list(sleepchar_rem = sleepchar_rem, memory_rem = memory_rem))
   }
-
   return(sleepchar_rem)
 }
 ```
 
 ```{r}
-#| echo: false
+#| include: false
 ## Function for building tables for the data classification
 cortable <- function(author, cptype, flip = TRUE, ...) {
-  # Combine the correlation matrices into a data frame and transpose it
+  # Combine the grouped correlation matrices into a data frame
   cor_group <- data.frame(...)
-  
   if (flip) cor_group <- t(cor_group)
   # Create the table caption
-  cptype <- switch(cptype,"CP Phase", "SP Peak Amplitude", "CP Strength", "CP Percentage")
+  cptype <- switch(cptype,"CP Phase", "SP Amplitude", "CP Strength", "CP Percentage")
   caption <- paste(author, cptype, "and Memory Pearson's r Correlation Table")
   
-  # Generate the table calling knitr::kable
+  # Generate the table for data extraction
   knitr::kable(cor_group, format = "markdown", caption = caption)
 }
 ```
 
 ```{r}
-#| echo: false
+#| include: false
+## Store all functions to call during the data analysis
 save(circular_cor, remove_outliers, cortable, file = "preprocessing_fun.RData")
 ```
 
 ```{r}
 #| warning: false
 #| message: false
-#| echo: false
+#| include: false
 ## Begin the scatterplot analysis for estimating effect sizes
 ## Import graphs to shinyDigitise
 ## Could be downloaded from the Github repository
@@ -127,7 +119,7 @@ save(circular_cor, remove_outliers, cortable, file = "preprocessing_fun.RData")
 ```{r}
 #| warning: false
 #| message: false
-#| echo: false
+#| include: false
 ## Begin the calculation of effect sizes by preprocessed data
 ## Import source data from Schreiner 2021
 Schreiner2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Schreiner2021/Sourcedata/source-data-preprocessed.csv", show_col_types = FALSE)
@@ -144,7 +136,7 @@ knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memor
 ```
 
 ```{r}
-#| echo: false
+#| include: false
 ## knitr::kable(result, format = "markdown")
 ```
 
@@ -173,23 +165,24 @@ favstats(~ sosppct, data = Schreiner2021_rem)
 ## Test the normality condition for further interpretation
 shapiro.test(Schreiner2021_rem$spsopct)
 shapiro.test(Schreiner2021_rem$sosppct)
+## Calculate the linear correlation between SO coupled SP and memory retention
+cor1 <- cor(spsopct ~ retention, use = "complete", data = Schreiner2021_rem)
+## Calculate the linear correlation between SP coupled SO and memory retention
+cor2 <- cor(sosppct ~ retention, use = "complete", data = Schreiner2021_rem)
 ```
+
 
 ```{r}
 #| warning: false
 #| message: false
 #| echo: false
-## Calculate the linear correlation between SO coupled SP and memory retention
-cor1 <- cor(spsopct ~ retention, use = "complete", data = Schreiner2021_rem)
-## Calculate the linear correlation between SP coupled SO and memory retention
-cor2 <- cor(sosppct ~ retention, use = "complete", data = Schreiner2021_rem)
 cortable("Schreiner", 4, flip = FALSE, "SPcSO" = cor1, "SOcSP" = cor2)
 ```
 
 ```{r}
 #| warning: false
 #| message: false
-#| echo: false
+#| include: false
 ## Remove all unused variables
 rm(list = ls())
 load("preprocessing_fun.RData")
@@ -200,7 +193,7 @@ load("preprocessing_fun.RData")
 ```{r}
 #| warning: false
 #| message: false
-#| echo: false
+#| include: false
 ## Import source data from Denis 2021a
 Denis2021a <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Denis2021a/Sourcedata/sleepldf_so_ss_data.csv", show_col_types = FALSE)
 ## view(Denis2021a)
@@ -269,7 +262,7 @@ cortable("Denis", 4, flip = FALSE, "Neutral" = cor1, "Emotional" = cor2, "Positi
 ```
 
 ```{r}
-#| echo: false
+#| include: false
 ## Test robustness by the bootstrap method for nonnormality data
 #> num_sim <- 10000
 #> set.seed(1821)
@@ -290,7 +283,7 @@ cortable("Denis", 4, flip = FALSE, "Neutral" = cor1, "Emotional" = cor2, "Positi
 ```{r}
 #| warning: false
 #| message: false
-#| echo: false
+#| include: false
 ## Remove all unused variables
 rm(list = ls())
 load("preprocessing_fun.RData")
@@ -301,7 +294,7 @@ load("preprocessing_fun.RData")
 ```{r}
 #| warning: false
 #| message: false
-#| echo: false
+#| include: false
 ## Import source data from Hahn 2020
 Hahn_beh <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/behaviorals.csv", show_col_types = FALSE)
 Hahn_chphase <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/child_phase.csv", show_col_types = FALSE)
@@ -324,9 +317,9 @@ Hahn_pct <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/m
 ```{r}
 #| warning: false
 #| message: false
-#| echo: false
+#| include: false
 ## Coupling Phase Preprocessing
-## Calculate the mean preferred phase in each specified channel location (F,C,P&O) for both groups
+## Calculate the mean preferred phase for each electrode location cluster
 Hahn_chphase <- Hahn_chphase |>
   rowwise() |>
   mutate(
@@ -376,9 +369,72 @@ knitr::kable(effect_sizead, format = "markdown", caption = "Hahn Adolescent CP P
 ```{r}
 #| warning: false
 #| message: false
+#| include: false
+## Spindle Amplitude Preprocessing
+# Calculate the mean spindle amplitude for each electrode location cluster
+Hahn_champ <- Hahn_champ |>
+  rowwise() |>
+  mutate(
+    Favg = mean(c(F3, Fz, F4)),
+    Cavg = mean(c(C3, Cz, C4)),
+    POavg = mean(c(P3, Pz, P4, O1, O2))) |>
+  dplyr::select(Favg, Cavg, POavg)
+#> view(Hahn_champ)
+Hahn_adamp <- Hahn_adamp |>
+  rowwise() |>
+  mutate(
+    Favg = mean(c(F3, Fz, F4)),
+    Cavg = mean(c(C3, Cz, C4)),
+    POavg = mean(c(P3, Pz, P4, O1, O2))) |>
+  dplyr::select(Favg, Cavg, POavg)
+#> view(Hahn_adamp)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Detect and Remove outlier(s)
+chresult <- remove_outliers(Hahn_champ, scale_columns = c("Favg", "Cavg", "POavg"), memory = Hahn_beh)
+Hahn_champ_rem <- chresult$sleepchar_rem
+Hahn_chbeh_rem <- chresult$memory_rem
+#> view(Hahn_champ_rem)
+#> view(Hahn_chbeh_rem)
+adresult <- remove_outliers(Hahn_adamp, scale_columns = c("Favg", "Cavg", "POavg"), memory = Hahn_beh)
+Hahn_adamp_rem <- adresult$sleepchar_rem
+Hahn_adbeh_rem <- adresult$memory_rem
+#> view(Hahn_adamp_rem)
+#> view(Hahn_adbeh_rem)
+```
+
+```{r}
+#| warning: false
+#| message: false
 #| echo: false
+# Calculate correlation coefficients for the child group in each channel location
+cor_ch <- c(
+  Frontal = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_champ_rem$Favg, use = "complete"),
+  Central = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_champ_rem$Cavg, use = "complete"),
+  "Parietal and Occipital" = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_champ_rem$POavg, use = "complete")
+)
+
+# Calculate correlation coefficients for the adolescent group in each channel location
+cor_ad <- c(
+  Frontal = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adamp_rem$Favg, use = "complete"),
+  Central = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adamp_rem$Cavg, use = "complete"),
+  "Parietal and Occipital" = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adamp_rem$POavg, use = "complete")
+)
+
+# Create the table
+cortable("Hahn", 2, flip = FALSE, Child = cor_ch, Adolescent = cor_ad)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
 ## Coupling Strength Preprocessing
-## Calculate the mean strength in each specified channel location (F,C,P&O) for both groups
+# Calculate the mean coupling strength for each electrode location cluster
 Hahn_chstr <- Hahn_chstr |>
   rowwise() |>
   mutate(
@@ -469,6 +525,287 @@ cor_ad <- c(
 
 # Create the table
 cortable("Hahn", 4, Child = cor_ch, Adolescent = cor_ad)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
+```
+
+## Kurz2023
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Import source data from Kurz 2023
+Kurz2023_raw <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Kurz2023/Sourcedata/dataDRMdevelopment.csv", show_col_types = FALSE)
+#> view(Kurz2023_raw)
+# Exclude participants from the wake group & with missing values
+Kurz2023 <- Kurz2023_raw |>
+  filter(Condition == "Sleep" & rowSums(is.na(cur_data()[, 46:84])) == 0) |>
+  dplyr::select(7,46:84)
+view(Kurz2023)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+## Coupling Phase Preprocessing
+## Calculate the circular linear correlation
+variables <- names(Kurz2023)[35:40]
+effect_size <- data.frame()
+for (var in variables) {
+  effect_var <- circular_cor(Kurz2023[[var]], Kurz2023$DRM_correct)
+  effect_size <- rbind(effect_size, effect_var)
+}
+rownames(effect_size) <- c("Slow Frontal", "Slow Central", "Slow Parietal","Fast Frontal", "Fast Central", "Fast Parietal")
+knitr::kable(effect_size, format = "markdown", caption = "Kurz CP Phase and Memory Pearson's r Correlation Table")
+## n = 30
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Spindle Amplitude Preprocessing
+## Detect and Remove outlier(s)
+Kurz2023amp <- remove_outliers(Kurz2023, scale_columns = c("SP_amplitude_NonREM_fast_frontal", "SP_amplitude_NonREM_fast_central", "SP_amplitude_NonREM_fast_parietal","SP_amplitude_NonREM_slow_frontal", "SP_amplitude_NonREM_slow_central", "SP_amplitude_NonREM_slow_parietal"))
+#> view(Kurz2023amp)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+# Calculate correlation coefficients between fast spindles and memory in each channel location
+cor_fast <- c(
+  "Frontal" = cor(DRM_correct ~ SP_amplitude_NonREM_fast_frontal, use = "complete", data = Kurz2023amp),
+  "Central" = cor(DRM_correct ~ SP_amplitude_NonREM_fast_central, use = "complete", data = Kurz2023amp),
+  "Parietal" = cor(DRM_correct ~ SP_amplitude_NonREM_fast_parietal, use = "complete", data = Kurz2023amp))
+
+# Calculate correlation coefficients between slow spindles and memory in each channel location
+cor_slow <- c(
+  "Frontal" = cor(DRM_correct ~ SP_amplitude_NonREM_slow_frontal, use = "complete", data = Kurz2023amp),
+  "Central " = cor(DRM_correct ~ SP_amplitude_NonREM_slow_central, use = "complete", data = Kurz2023amp),
+  "Parietal" = cor(DRM_correct ~ SP_amplitude_NonREM_slow_parietal, use = "complete", data = Kurz2023amp))
+
+# Create the table
+cortable("Kurz", 2, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Coupling Strength Preprocessing
+## Detect and Remove outlier(s)
+Kurz2023str <- remove_outliers(Kurz2023, scale_columns = c("CouplStrengthOnlyCoupl_slow_frontal", "CouplStrengthOnlyCoupl_slow_central", "CouplStrengthOnlyCoupl_slow_parietal","CouplStrengthOnlyCoupl_fast_frontal", "CouplStrengthOnlyCoupl_fast_central", "CouplStrengthOnlyCoupl_fast_parietal"))
+#> view(Kurz2023str)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+# Calculate correlation coefficients between fast SP coupling and memory in each channel location
+cor_fast <- c(
+  "Frontal" = cor(DRM_correct ~ CouplStrengthOnlyCoupl_fast_frontal, use = "complete", data = Kurz2023str),
+  "Central" = cor(DRM_correct ~ CouplStrengthOnlyCoupl_fast_central, use = "complete", data = Kurz2023str),
+  "Parietal" = cor(DRM_correct ~ CouplStrengthOnlyCoupl_fast_parietal, use = "complete", data = Kurz2023str))
+
+# Calculate correlation coefficients between slow SP coupling and memory in each channel location
+cor_slow <- c(
+  "Frontal" = cor(DRM_correct ~ CouplStrengthOnlyCoupl_slow_frontal, use = "complete", data = Kurz2023str),
+  "Central " = cor(DRM_correct ~ CouplStrengthOnlyCoupl_slow_central, use = "complete", data = Kurz2023str),
+  "Parietal" = cor(DRM_correct ~ CouplStrengthOnlyCoupl_slow_parietal, use = "complete", data = Kurz2023str))
+
+# Create the table
+cortable("Kurz", 3, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
+```
+
+## Donnelly2022
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Import source data from Donnelly 2022
+eeg_download <- "https://github.com/Theaang/so-sp-coupling/raw/main/Paper/Donnelly2022/Sourcedata/sleep_study_eeg_summary_data_z.rds"
+Donnelly_eeg <- readRDS(url(eeg_download, method="libcurl"))
+beh_download <- "https://github.com/Theaang/so-sp-coupling/raw/main/Paper/Donnelly2022/Sourcedata/sleep_study_beh_psych_demographic_data.rds"
+Donnelly_behrow <- readRDS(url(beh_download, method="libcurl"))
+#> view(Donnelly_eeg)
+#> view(Donnelly_behrow)
+
+## Extract all datasets from the RDS file
+Donnelly2022 <- list()
+for (i in 1:nrow(Donnelly_eeg)) {
+  Donnelly2022[[i]] <- Donnelly_eeg[[3]][[i]]
+}
+Donnellyamp_raw <- Donnelly2022[[14]]
+Donnellystr_raw <- Donnelly2022[[20]]
+Donnellyphase_raw <- Donnelly2022[[21]]
+## N2sigpwr <- Donnelly2022[[1]]
+## N3sigpwr <- Donnelly2022[[6]]
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+## Transform the memory data
+# Calculate the memory retention rate
+# Exclude participants from the patient group and missing values
+Donnelly_beh <- Donnelly_behrow |>
+  filter(group == "Sib") |>
+  mutate(retention = accC_morning - accC_evening) |>
+  filter(rowSums(is.na(cur_data()[, 26:27])) == 0)
+#> view(Donnelly_beh)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Coupling Phase Preprocessing
+# Filter unused groups and electrodes
+Donnellyphase <- Donnellyphase_raw |>
+  filter(group == "Sib" & !grepl("^FC|^T|^FP|^FT|^CP|^AF", electrode))
+
+# Adjust the dataframe format for data extraction
+Donnellyphase <- Donnellyphase |>
+  pivot_wider(names_from = electrode,
+              values_from = value,
+              id_cols = subject)
+#> view(Donnellyphase)
+
+# Calculate the mean coupling phase for each electrode location cluster
+Donnellyphase_avg <- Donnellyphase |>
+  rowwise() |>
+  mutate(
+    Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, Fz)) * pi) / 180,
+    Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz)) * pi) / 180,
+    POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, Pz, PO3, PO4, O1, O2)) * pi) / 180)
+Donnellyphase_avg <- Donnellyphase_avg[-7,]
+#> view(Donnellyphase_avg)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+## Calculate the circular linear correlation
+variables <- c("Favg", "Cavg", "POavg")
+effect_size <- data.frame()
+for (var in variables) {
+  effect_var <- circular_cor(Donnellyphase_avg[[var]], Donnelly_beh$retention)
+  effect_size <- rbind(effect_size, effect_var)
+}
+rownames(effect_size) <- c("Frontal", "Central", "Parietal and Occipital")
+knitr::kable(effect_size, format = "markdown", caption = "Donnelly CP Phase and Memory Pearson's r Correlation Table")
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Spindle Amplitude Preprocessing
+# Filter unused groups and electrodes
+Donnellyamp <- Donnellyamp_raw |>
+  filter(group == "Sib" & !grepl("^FC|^T|^FP|^FT|^CP|^AF", electrode))
+
+# Adjust the dataframe format for data extraction
+Donnellyamp <- Donnellyamp |>
+  pivot_wider(names_from = electrode,
+              values_from = value,
+              id_cols = subject)
+#> view(Donnellyamp)
+
+# Calculate the mean spindle amplitude for each electrode location cluster
+Donnellyamp_avg <- Donnellyamp |>
+  rowwise() |>
+  mutate(
+    Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, Fz))),
+    Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz))),
+    POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, Pz, PO3, PO4, O1, O2))))
+Donnellyamp_avg <- Donnellyamp_avg[-7,]
+
+# Detect and remove outlier(s)
+Donnellyamp_avg <- remove_outliers(Donnellyamp_avg, scale_columns = c("Favg", "Cavg", "POavg"))
+
+#> view(Donnellyamp_avg)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+# Calculate correlation coefficients between spindle amplitude and memory in each channel location
+cor <- c(
+  "Frontal" = cor(Donnelly_beh$retention ~ Donnellyamp_avg$Favg, use = "complete"),
+  "Central" = cor(Donnelly_beh$retention ~ Donnellyamp_avg$Cavg, use = "complete"),
+  "Parietal" = cor(Donnelly_beh$retention ~ Donnellyamp_avg$POavg, use = "complete"))
+
+cortable("Donnelly", 2, "Correlation" = cor)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Coupling Strength Preprocessing
+# Filter unused groups and electrodes
+Donnellystr <- Donnellystr_raw |>
+  filter(group == "Sib" & !grepl("^FC|^T|^FP|^FT|^CP|^AF", electrode))
+
+# Adjust the dataframe format for data extraction
+Donnellystr <- Donnellystr |>
+  pivot_wider(names_from = electrode,
+              values_from = value,
+              id_cols = subject)
+#> view(Donnellystr)
+
+# Calculate the mean coupling strength for each electrode location cluster
+Donnellystr_avg <- Donnellystr |>
+  rowwise() |>
+  mutate(
+    Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, Fz))),
+    Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz))),
+    POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, Pz, PO3, PO4, O1, O2))))
+Donnellystr_avg <- Donnellystr_avg[-7,]
+
+# Detect and remove outlier(s)
+Donnellystr_avg <- remove_outliers(Donnellystr_avg, scale_columns = c("Favg", "Cavg", "POavg"))
+
+#> view(Donnellystr_avg)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+# Calculate correlation coefficients between coupling strength and memory in each channel location
+cor <- c(
+  "Frontal" = cor(Donnelly_beh$retention ~ Donnellystr_avg$Favg, use = "complete"),
+  "Central" = cor(Donnelly_beh$retention ~ Donnellystr_avg$Cavg, use = "complete"),
+  "Parietal" = cor(Donnelly_beh$retention ~ Donnellystr_avg$POavg, use = "complete"))
+
+cortable("Donnelly", 3, "Correlation" = cor)
 ```
 
 ```{r}

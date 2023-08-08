@@ -3,7 +3,7 @@ title: "SO-SP Coupling and Memory Consolidation — Effect Size Preprocessing"
 format: pdf
 editor: visual
 author: "Author"
-date: "2023-08-05"
+date: "2023-08-08"
 date-format: iso
 toc: true
 ---
@@ -340,6 +340,7 @@ for (var in variables) {
 rownames(effect_sizead) <- c("Frontal", "Central", "Parietal and Occipital")
 knitr::kable(effect_sizead, format = "markdown", caption = "Hahn Adolescent CP Phase and Memory Pearson's r Correlation Table")
 ```
+
 ```{r}
 #| warning: false
 #| message: false
@@ -378,6 +379,7 @@ Hahn_adbeh_rem <- adresult$memory_rem
 #> view(Hahn_adamp_rem)
 #> view(Hahn_adbeh_rem)
 ```
+
 ```{r}
 #| warning: false
 #| message: false
@@ -491,6 +493,7 @@ cor_ad <- c(
 # Create the table
 cortable("Hahn", 4, Child = cor_ch, Adolescent = cor_ad)
 ```
+
 ```{r}
 #| warning: false
 #| message: false
@@ -511,7 +514,7 @@ Kurz2023_raw <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupli
 Kurz2023 <- Kurz2023_raw |>
   filter(Condition == "Sleep" & rowSums(is.na(cur_data()[, 46:84])) == 0) |>
   dplyr::select(7,46:84)
-#> view(Kurz2023)
+view(Kurz2023)
 ```
 
 ```{r}
@@ -557,6 +560,7 @@ cor_slow <- c(
 # Create the table
 cortable("Kurz", 2, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
 ```
+
 ```{r}
 #| warning: false
 #| message: false
@@ -582,6 +586,7 @@ cor_slow <- c(
 # Create the table
 cortable("Kurz", 3, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
 ```
+
 ```{r}
 #| warning: false
 #| message: false
@@ -626,7 +631,6 @@ Donnelly_beh <- Donnelly_behrow |>
 #> view(Donnelly_beh)
 ```
 
-
 ```{r}
 ## Coupling Phase Preprocessing
 # Filter unused groups and electrodes
@@ -662,6 +666,7 @@ for (var in variables) {
 rownames(effect_size) <- c("Frontal", "Central", "Parietal and Occipital")
 knitr::kable(effect_size, format = "markdown", caption = "Donnelly CP Phase and Memory Pearson's r Correlation Table")
 ```
+
 ```{r}
 ## Spindle Amplitude Preprocessing
 # Filter unused groups and electrodes
@@ -737,6 +742,7 @@ cor <- c(
 
 cortable("Donnelly", 3, "Correlation" = cor)
 ```
+
 ```{r}
 #| warning: false
 #| message: false
