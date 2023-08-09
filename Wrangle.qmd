@@ -59,3 +59,10 @@ curve(dhnorm(x, 0.5), 0, 3, col = "black", add = TRUE, lwd = 2)
 abline(v = 1, col = "gray", lty = 2)
 legend("topright", legend = c("Half-Student-t (0, 3, 0.5)", "Half-Cauchy (0, 0.5)", "Half-Cauchy (0, 0.13)", "Half-Normal (0, 0.5)"), col = c("blue", "red","orange","black"), lwd = 2, bty = "n")
 ```
+
+```{r}
+library(robvis)
+data_rob2 <- read.csv("~/Desktop/ROB2_example.csv")
+rob_summary(data_rob2, tool = "ROB2", overall = "TRUE", weighted = "FALSE")
+rob_traffic_light(data_rob2, tool = "ROB2", psize = 10)
+```

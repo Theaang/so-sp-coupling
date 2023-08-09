@@ -816,3 +816,207 @@ cortable("Donnelly", 3, "Correlation" = cor)
 rm(list = ls())
 load("preprocessing_fun.RData")
 ```
+
+## Denis2022
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Import source data from Denis 2022
+Denis_files <- c("behaviour.csv", "fast_amplitude.csv", "slow_amplitude.csv", 
+                "fast_power.csv", "slow_power.csv", "fast_consistency.csv", 
+                "slow_consistency.csv", "fast_percent.csv", "slow_percent.csv", 
+                "fast_phase.csv", "slow_phase.csv")
+for (file in Denis_files) {
+  file_url <- paste0("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Denis2022/Sourcedata/", file)
+  data <- read.csv(file_url)
+  data <- data[-c(18, 34), ] ## Remove empty rows
+  assign(gsub(".csv", "", file), data)
+}
+behaviour_fast <- behaviour |>
+  rowwise() |>
+  mutate(
+  change_pres = change_1pres)
+## Create a separate behavior dataset for slow spindle data due to missing value
+behaviour_slow = behaviour_fast[-c(5, 7, 12, 27, 28, 32), ]
+## view(behaviour_slow)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Coupling Phase Preprocessing
+## Calculate the mean coupling phase for each electrode location cluster
+fast_phase_avg <- fast_phase |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, Fz))),
+ Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz))),
+ POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, Pz, PO3, PO4, PO7, PO8, POz, O1, O2))))
+## view(fast_phase_avg)
+slow_phase_avg <- slow_phase |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, Fz))),
+ Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz))),
+ POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, Pz, PO3, PO4, PO7, PO8, POz, O1, O2)))) |>
+  filter(!any(is.na(c_across(F2:POavg))))
+## view(slow_phase_avg)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+variables <- c("Favg", "Cavg", "POavg")
+es_fast <- data.frame()
+for (var in variables) {
+ev_fast <- circular_cor(fast_phase_avg[[var]], behaviour_fast$change_pres)
+es_fast <- rbind(es_fast, ev_fast)
+}
+es_slow <- data.frame()
+for (var in variables) {
+ev_slow <- circular_cor(slow_phase_avg[[var]], behaviour_slow$change_pres)
+es_slow <- rbind(es_slow, ev_slow)
+}
+effect_size <- rbind(es_slow, es_fast)
+rownames(effect_size) <- c("Slow Frontal", "Slow Central", "Slow Parietal","Fast Frontal", "Fast Central", "Fast Parietal")
+knitr::kable(effect_size, format = "markdown", caption = "Denis CP Phase and Memory Pearson's r Correlation Table")
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+fast_amplitude_avg <- fast_amplitude |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, Fz))),
+ Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz))),
+ POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, Pz, PO3, PO4, PO7, PO8, POz, O1, O2))))
+## view(fast_amplitude_avg)
+slow_amplitude_avg <- slow_amplitude |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, Fz))),
+ Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz))),
+ POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, Pz, PO3, PO4, PO7, PO8, POz, O1, O2)))) |>
+  filter(!any(is.na(c_across(F2:POavg))))
+## view(slow_amplitude_avg)
+```
+
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+# Calculate correlation coefficients between fast spindles and memory in each channel location
+cor_fast <- c(
+  "Frontal" = cor(behaviour_fast$change_pres ~ fast_amplitude_avg$Favg, use = "complete"),
+  "Central" = cor(behaviour_fast$change_pres ~ fast_amplitude_avg$Cavg, use = "complete"),
+  "Parietal" = cor(behaviour_fast$change_pres ~ fast_amplitude_avg$POavg, use = "complete"))
+
+# Calculate correlation coefficients between slow spindles and memory in each channel location
+cor_slow <- c(
+  "Frontal" = cor(behaviour_slow$change_pres ~ slow_amplitude_avg$Favg, use = "complete"),
+  "Central" = cor(behaviour_slow$change_pres ~ slow_amplitude_avg$Cavg, use = "complete"),
+  "Parietal" = cor(behaviour_slow$change_pres ~ slow_amplitude_avg$POavg, use = "complete"))
+
+# Create the table
+cortable("Denis", 2, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+fast_consistency_avg <- fast_consistency |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, Fz))),
+ Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz))),
+ POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, Pz, PO3, PO4, PO7, PO8, POz, O1, O2))))
+## view(fast_consistency_avg)
+slow_consistency_avg <- slow_consistency |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, Fz))),
+ Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz))),
+ POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, Pz, PO3, PO4, PO7, PO8, POz, O1, O2)))) |>
+  filter(!any(is.na(c_across(F2:POavg))))
+## view(slow_consistency_avg)
+```
+
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+# Calculate correlation coefficients between fast spindles and memory in each channel location
+cor_fast <- c(
+  "Frontal" = cor(behaviour_fast$change_pres ~ fast_consistency_avg$Favg, use = "complete"),
+  "Central" = cor(behaviour_fast$change_pres ~ fast_consistency_avg$Cavg, use = "complete"),
+  "Parietal" = cor(behaviour_fast$change_pres ~ fast_consistency_avg$POavg, use = "complete"))
+
+# Calculate correlation coefficients between slow spindles and memory in each channel location
+cor_slow <- c(
+  "Frontal" = cor(behaviour_slow$change_pres ~ slow_consistency_avg$Favg, use = "complete"),
+  "Central" = cor(behaviour_slow$change_pres ~ slow_consistency_avg$Cavg, use = "complete"),
+  "Parietal" = cor(behaviour_slow$change_pres ~ slow_consistency_avg$POavg, use = "complete"))
+
+# Create the table
+cortable("Denis", 3, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+fast_percent_avg <- fast_percent |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, Fz))),
+ Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz))),
+ POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, Pz, PO3, PO4, PO7, PO8, POz, O1, O2))))
+## view(fast_percent_avg)
+slow_percent_avg <- slow_percent |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, Fz))),
+ Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz))),
+ POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, Pz, PO3, PO4, PO7, PO8, POz, O1, O2)))) |>
+  filter(!any(is.na(c_across(F2:POavg))))
+## view(slow_percent_avg)
+```
+
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+# Calculate correlation coefficients between fast spindles and memory in each channel location
+cor_fast <- c(
+  "Frontal" = cor(behaviour_fast$change_pres ~ fast_percent_avg$Favg, use = "complete"),
+  "Central" = cor(behaviour_fast$change_pres ~ fast_percent_avg$Cavg, use = "complete"),
+  "Parietal" = cor(behaviour_fast$change_pres ~ fast_percent_avg$POavg, use = "complete"))
+
+# Calculate correlation coefficients between slow spindles and memory in each channel location
+cor_slow <- c(
+  "Frontal" = cor(behaviour_fast$change_pres ~ slow_percent_avg$Favg, use = "complete"),
+  "Central" = cor(behaviour_fast$change_pres ~ slow_percent_avg$Cavg, use = "complete"),
+  "Parietal" = cor(behaviour_fast$change_pres ~ slow_percent_avg$POavg, use = "complete"))
+
+# Create the table
+cortable("Denis", 4, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
+```
