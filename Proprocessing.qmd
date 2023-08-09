@@ -121,6 +121,7 @@ save(circular_cor, remove_outliers, cortable, file = "preprocessing_fun.RData")
 ## Import source data from Schreiner 2021
 Schreiner2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Schreiner2021/Sourcedata/source-data-preprocessed.csv", show_col_types = FALSE)
 ## view(Schreiner2021)
+Schreiner2021addtl <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Schreiner2021/Sourcedata/additional.csv", show_col_types = FALSE)
 ```
 
 ```{r}
@@ -128,7 +129,7 @@ Schreiner2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupl
 #| message: false
 ## Calculate the circular linear correlation
 sch_phase <- circular_cor(Schreiner2021$phase, Schreiner2021$retention)
-knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memory Pearson's r Correlation Table",row.names = FALSE)
+## knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memory Pearson's r Correlation Table",row.names = FALSE)
 ```
 
 ```{r}
@@ -147,7 +148,20 @@ Schreiner2021 <- Schreiner2021 |>
     soavg = (soobjects + soscenes)/2,
     spsopct = cpavg/spavg,
     sosppct = cpavg/soavg)
+Schreiner2021addtl <- Schreiner2021addtl |>
+  mutate(
+    spamp = (object_amp + scene_amp)/2,
+    cpstr = (object_str + scene_str)/2)
 Schreiner2021_rem <- remove_outliers(Schreiner2021, scale_columns = c("spsopct", "sosppct"))
+Schreiner2021addtl_rem <- remove_outliers(Schreiner2021addtl, scale_columns = c("spamp", "cpstr"))
+```
+
+```{r}
+cor1 <- cor(Schreiner2021addtl_rem$spamp ~ Schreiner2021_rem$retention, use = "complete")
+## cortable("Schreiner", 2, flip = FALSE, "Correlation" = cor1)
+cor2 <- cor(Schreiner2021addtl_rem$cpstr ~ Schreiner2021_rem$retention, use = "complete")
+## cortable("Schreiner", 3, flip = FALSE, "Correlation" = cor2)
+
 ```
 
 ```{r}
@@ -160,10 +174,17 @@ favstats(~ sosppct, data = Schreiner2021_rem)
 shapiro.test(Schreiner2021_rem$spsopct)
 shapiro.test(Schreiner2021_rem$sosppct)
 ## Calculate the linear correlation between SO coupled SP and memory retention
-cor1 <- cor(spsopct ~ retention, use = "complete", data = Schreiner2021_rem)
+cor3 <- cor(spsopct ~ retention, use = "complete", data = Schreiner2021_rem)
 ## Calculate the linear correlation between SP coupled SO and memory retention
-cor2 <- cor(sosppct ~ retention, use = "complete", data = Schreiner2021_rem)
-cortable("Schreiner", 4, flip = FALSE, "SPcSO" = cor1, "SOcSP" = cor2)
+cor4 <- cor(sosppct ~ retention, use = "complete", data = Schreiner2021_rem)
+## cortable("Schreiner", 4, flip = FALSE, "SPcSO" = cor3, "SOcSP" = cor4)
+```
+
+```{r}
+#| warning: false
+#| message: false
+effect_size <- rbind(sch_phase, cor1, cor2, cor3, cor4)
+knitr::kable(data.frame("Phase" = sch_phase, "Amplitude" = cor1, "Strength" = cor2, "SPcSO" = cor3, "SOcSP" = cor4), format = "markdown", caption = "Schreiner Coupling and Memory Pearson's r Correlation Table", row.names = FALSE)
 ```
 
 ```{r}
@@ -180,66 +201,94 @@ load("preprocessing_fun.RData")
 #| warning: false
 #| message: false
 ## Import source data from Denis 2021a
-Denis2021a <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Denis2021a/Sourcedata/sleepldf_so_ss_data.csv", show_col_types = FALSE)
-## view(Denis2021a)
+Denis2021a <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Denis2021a/Sourcedata/ejn_data.csv", show_col_types = FALSE)
+#> view(Denis2021a)
 ```
 
 ```{r}
 #| warning: false
 #| message: false
-## Filter out the stress group and remove outlier(s) for coupling strength
-Denis2021a_str <- Denis2021a |>
-  dplyr::select(cond, neu_hit_fa:neg_hit_fa, n3_cp_str_all)|>
-  filter(cond == 2)|>
+## Filter out the stress group and weight the memory score
+Denis2021a <- Denis2021a |>
+  filter(cond == "control")|>
   mutate(avg_hit_fa = (neu_hit_fa*100 + emo_hit_fa*200)/300)
-Denis2021a_str_rem <- remove_outliers(Denis2021a_str, scale_columns = "n3_cp_str_all")
+## Detect and remove outlier(s)
+Denis2021a_amp_rem <- remove_outliers(Denis2021a, scale_columns = c("n2_fast_amplitude", "n3_fast_amplitude"))
+Denis2021a_str_rem<- remove_outliers(Denis2021a, scale_columns = c("n2_fast_consistency","n3_fast_consistency"))
+Denis2021a_per_rem<- remove_outliers(Denis2021a, scale_columns = c("n2_fast_ss_coupled_percent", "n3_fast_ss_coupled_percent"))
 ## Calculate summary statistics for the coupling percentage
-favstats(~ n3_cp_str_all, data = Denis2021a_str_rem)
+## favstats(~ n3_cp_str_all, data = Denis2021a_str_rem)
 ## Test the normality condition for further interpretation
-shapiro.test(Denis2021a_str_rem$n3_cp_str_all)
+## shapiro.test(Denis2021a_str_rem$n3_cp_str_all)
 ## Note: The distribution of coupling strength data deviates significantly (p < 0.02)
 ## from the normal distribution
 ```
 
 ```{r}
-#| warning: false
-#| message: false
-## Calculate the effect size for each emotional condition
-cor1 <- cor(neu_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
-cor2 <- cor(emo_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
-cor3 <- cor(pos_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
-cor4 <- cor(neg_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
-## Calculate the weighted effect size for all conditions
-cor5 <- cor(avg_hit_fa ~ n3_cp_str_all, use = "complete", data = Denis2021a_str_rem)
-cortable("Denis", 3, flip = FALSE, "Neutral" = cor1, "Emotional" = cor2, "Positive" = cor3, "Negative" = cor4, "Weighted Average" = cor5)
+variables <- c("neu_hit_fa", "emo_hit_fa", "avg_hit_fa")
+es_n2 <- data.frame()
+for (var in variables) {
+ev_n2 <- circular_cor(Denis2021a$n2_fast_phase, Denis2021a[[var]])
+es_n2 <- rbind(es_n2, ev_n2)
+}
+es_n3 <- data.frame()
+for (var in variables) {
+ev_n3 <- circular_cor(Denis2021a$n3_fast_phase, Denis2021a[[var]])
+es_n3 <- rbind(es_n3, ev_n3)
+}
+effect_size <- rbind(es_n2, es_n3)
+rownames(effect_size) <- c("N2 Neutral", "N2 Emotional", "N2 Weighted","N3 Neutral", "N3 Emotional", "N3 Weighted")
+knitr::kable(effect_size, format = "markdown", caption = "Denis 2021a CP Phase and Memory Pearson's r Correlation Table")
 ```
 
 ```{r}
 #| warning: false
 #| message: false
-## Filter out the stress group and remove outlier(s) for coupling percentage
-Denis2021a_per <- Denis2021a |>
-  dplyr::select(cond, neu_hit_fa:neg_hit_fa, n3_cp_per_all)|>
-  filter(cond == 2)|>
-  mutate(avg_hit_fa = (neu_hit_fa*100 + emo_hit_fa*200)/300)
-Denis2021a_per_rem <- remove_outliers(Denis2021a_per, scale_columns = "n3_cp_per_all")
-## Calculate summary statistics for the coupling percentage
-favstats(~ n3_cp_per_all, data = Denis2021a_per_rem)
-## Test the normality condition for further interpretation
-shapiro.test(Denis2021a_per_rem$n3_cp_per_all)
+## Calculate the effect size for each emotional condition and pooled result
+cor_n2 <- c(
+  Neutral = cor(neu_hit_fa ~ n2_fast_amplitude, use = "complete", data = Denis2021a_amp_rem),
+  Emotional = cor(emo_hit_fa ~ n2_fast_amplitude, use = "complete", data = Denis2021a_amp_rem),
+  Weighted = cor(avg_hit_fa ~ n2_fast_amplitude, use = "complete", data = Denis2021a_amp_rem)
+)
+cor_n3 <- c(
+  Neutral = cor(neu_hit_fa ~ n3_fast_amplitude, use = "complete", data = Denis2021a_amp_rem),
+  Emotional = cor(emo_hit_fa ~ n3_fast_amplitude, use = "complete", data = Denis2021a_amp_rem),
+  Weighted = cor(avg_hit_fa ~ n3_fast_amplitude, use = "complete", data = Denis2021a_amp_rem)
+)
+cortable("Denis 2021a", 2, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
 ```
 
 ```{r}
 #| warning: false
 #| message: false
-## Calculate the effect size for each emotional condition
-cor1 <- cor(neu_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per_rem)
-cor2 <-cor(emo_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per_rem)
-cor3 <-cor(pos_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per_rem)
-cor4 <-cor(neg_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per_rem)
-## Calculate the weighted effect size for all conditions
-cor5 <-cor(avg_hit_fa ~ n3_cp_per_all, use = "complete", data = Denis2021a_per)
-cortable("Denis", 4, flip = FALSE, "Neutral" = cor1, "Emotional" = cor2, "Positive" = cor3, "Negative" = cor4, "Weighted Average" = cor5)
+## Calculate the effect size for each emotional condition and pooled result
+cor_n2 <- c(
+  Neutral = cor(neu_hit_fa ~ n2_fast_consistency, use = "complete", data = Denis2021a_str_rem),
+  Emotional = cor(emo_hit_fa ~ n2_fast_consistency, use = "complete", data = Denis2021a_str_rem),
+  Weighted = cor(avg_hit_fa ~ n2_fast_consistency, use = "complete", data = Denis2021a_str_rem)
+)
+cor_n3 <- c(
+  Neutral = cor(neu_hit_fa ~ n3_fast_consistency, use = "complete", data = Denis2021a_str_rem),
+  Emotional = cor(emo_hit_fa ~ n3_fast_consistency, use = "complete", data = Denis2021a_str_rem),
+  Weighted = cor(avg_hit_fa ~ n3_fast_consistency, use = "complete", data = Denis2021a_str_rem)
+)
+cortable("Denis 2021a", 3, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
+```
+```{r}
+#| warning: false
+#| message: false
+## Calculate the effect size for each emotional condition and pooled result
+cor_n2 <- c(
+  Neutral = cor(neu_hit_fa ~ n2_fast_ss_coupled_percent, use = "complete", data = Denis2021a_per_rem),
+  Emotional = cor(emo_hit_fa ~ n2_fast_ss_coupled_percent, use = "complete", data = Denis2021a_per_rem),
+  Weighted = cor(avg_hit_fa ~ n2_fast_ss_coupled_percent, use = "complete", data = Denis2021a_per_rem)
+)
+cor_n3 <- c(
+  Neutral = cor(neu_hit_fa ~ n3_fast_ss_coupled_percent, use = "complete", data = Denis2021a_per_rem),
+  Emotional = cor(emo_hit_fa ~ n3_fast_ss_coupled_percent, use = "complete", data = Denis2021a_per_rem),
+  Weighted = cor(avg_hit_fa ~ n3_fast_ss_coupled_percent, use = "complete", data = Denis2021a_per_rem)
+)
+cortable("Denis 2021a", 4, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
 ```
 
 ```{r}
@@ -860,7 +909,7 @@ fast_consistency_avg <- fast_consistency |>
 rowwise() |>
 mutate(
  Favg = (mean(c(F1, F2, F3, F4, F5, F6, F7, F8, Fz))),
- Cavg = (mean(c(C1, C2, C3, C4, C5, C6, Cz))),
+ Cavg = (mean(c(C3, C4, Cz))),
  POavg = (mean(c(P1, P2, P3, P4, P5, P6, P7, P8, Pz, PO3, PO4, PO7, PO8, POz, O1, O2))))
 ## view(fast_consistency_avg)
 slow_consistency_avg <- slow_consistency |>
@@ -940,3 +989,12 @@ cortable("Denis", 4, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = c
 rm(list = ls())
 load("preprocessing_fun.RData")
 ```
+
+```{r}
+#| warning: false
+#| message: false
+## Import source data from Kurz 2023
+Denis2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Kurz2023/Sourcedata/dataDRMdevelopment.csv", show_col_types = FALSE)
+#> view(Kurz2023_raw)
+```
+
