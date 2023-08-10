@@ -974,9 +974,9 @@ cor_fast <- c(
 
 # Calculate correlation coefficients between slow spindles and memory in each channel location
 cor_slow <- c(
-  "Frontal" = cor(behaviour_fast$change_pres ~ slow_percent_avg$Favg, use = "complete"),
-  "Central" = cor(behaviour_fast$change_pres ~ slow_percent_avg$Cavg, use = "complete"),
-  "Parietal" = cor(behaviour_fast$change_pres ~ slow_percent_avg$POavg, use = "complete"))
+  "Frontal" = cor(behaviour_slow$change_pres ~ slow_percent_avg$Favg, use = "complete"),
+  "Central" = cor(behaviour_slow$change_pres ~ slow_percent_avg$Cavg, use = "complete"),
+  "Parietal" = cor(behaviour_slow$change_pres ~ slow_percent_avg$POavg, use = "complete"))
 
 # Create the table
 cortable("Denis", 4, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
@@ -996,5 +996,68 @@ load("preprocessing_fun.RData")
 ## Import source data from Kurz 2023
 Denis2021 <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Kurz2023/Sourcedata/dataDRMdevelopment.csv", show_col_types = FALSE)
 #> view(Kurz2023_raw)
+```
+
+## Mylonas2020
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Import source data from Mylonas2020
+Mylonas2020 <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Mylonas2020/Sourcedata/Mylonas2020data.csv")
+Mylonas2020 <- Mylonas2020[-29, ]
+Mylonas2020cp <- Mylonas2020[-22, ]
+view(Mylonas2020)
+view(Mylonas2020cp)
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Calculate the circular linear correlation
+mylonas_phase <- circular_cor(Mylonas2020cp$Preferred.Phase..degrees., Mylonas2020cp$Memory.Change....)
+## knitr::kable(sch_phase,format ="markdown",caption ="Mylonas 2020 CP Phase and Memory Pearson's r Correlation Table",row.names = FALSE)
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Calculate the coupling percentage and remove outlier(s)
+Mylonas2020amp <- remove_outliers(Mylonas2020, scale_columns = "Spindle.Amplitude..muV.")
+Mylonas2020str <- remove_outliers(Mylonas2020cp, scale_columns = "Coupling.Strength")
+Mylonas2020pct <- remove_outliers(Mylonas2020, scale_columns =  c("X..of.Spindles.Coupled.to.SOs","X..of.SOs.coupled.to.spindles"))
+```
+
+```{r}
+cor1 <- cor(Spindle.Amplitude..muV. ~ Memory.Change...., use = "complete", data = Mylonas2020amp)
+## cortable("Mylonas 2020", 2, flip = FALSE, "Correlation" = cor1)
+cor2 <- cor(Coupling.Strength ~ Memory.Change...., use = "complete", data = Mylonas2020str)
+## cortable("Mylonas 2020", 3, flip = FALSE, "Correlation" = cor2)
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Calculate the linear correlation between SO coupled SP and memory retention
+cor3 <- cor(X..of.Spindles.Coupled.to.SOs ~ Memory.Change...., use = "complete", data = Mylonas2020pct)
+## Calculate the linear correlation between SP coupled SO and memory retention
+cor4 <- cor(X..of.SOs.coupled.to.spindles ~ Memory.Change...., use = "complete", data = Mylonas2020pct)
+## cortable("Mylonas 2020", 4, flip = FALSE, "SPcSO" = cor3, "SOcSP" = cor4)
+```
+
+```{r}
+#| warning: false
+#| message: false
+effect_size <- rbind(mylonas_phase, cor1, cor2, cor3, cor4)
+knitr::kable(data.frame("Phase" = mylonas_phase, "Amplitude" = cor1, "Strength" = cor2, "SPcSO" = cor3, "SOcSP" = cor4), format = "markdown", caption = "Mylonas 2020 Coupling and Memory Pearson's r Correlation Table", row.names = FALSE)
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
 ```
 
