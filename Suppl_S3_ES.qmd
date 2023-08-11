@@ -1,10 +1,11 @@
 ---
-title: "Effect Size Preprocessing Table"
+title: "Supplemental Material 3: Preprocessed Effect Sizes from Invididual Source Data"
 format: pdf
 editor: visual
 author: "Author"
-date: "2023-08-08"
+date: "2023-08-10"
 date-format: iso
+toc: true
 ---
 
 ```{r}
@@ -35,16 +36,28 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
                       tidy=FALSE, size="small")
 ```
 
-```{r}
-#| warning: false
-#| message: false
-#| include: false
-## All papers that provided source data and/or reported correlation in graphs
-## have undergone preprocess to normalize the correlation coefficient
-## After preprocessing in R, all correlation coefficients reported as pearson's
-## r were transformed to Fisher's z by the Practical Meta-Analysis Effect Size 
-## Calculator developed by Dr.Wilson
-```
+# I. Statement
+
+All studies that provided processed individual sleep and memory measurement data by authors have undergone preprocessing or reanalysis to estimate correlation coefficients using standardized measurement methods selected for the meta-analysis. We are unable to disclose the source data due to copyright restrictions associated with the original studies. Instead, we will directly report the preprocessed effect sizes and formulas used. Individuals or groups who are interested in any source dataset should contact the authors of the original studies directly.
+
+\newpage
+
+In cases where meta-analysis authors reached out to the original study authors via email to obtain effect sizes, if the original study authors chose to provide processed individual datasets rather than reporting effect sizes directly, neither party requested or exchanged any information that could potentially expose the personal identities of individual participants. The data may have been sorted, merged or excluded based on the methods outlined in the original studies and the moderator selection in the meta-analysis. All data processing was performed within the Quarto document of R Studio version 2023.6.1.524. (Posit Team, 2023) Not all effect sizes reported in this material will necessarily be used in the meta-analysis, contingent upon the inclusion criteria and moderators.
+
+# II. Formulas
+
+## Pearson Product-Moment Correlation Coefficient
+
+$$ r = \frac{\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})}
+    {\sqrt{\sum_{i=1}^{n}(x_i - \bar{x})^2 \sum_{i=1}^{n}(y_i - \bar{y})^2}} \tag{1} \label{eq:corr} $$
+
+## Circular-Linear Correlation Coefficient
+
+$$R = \sqrt{\frac{r_{12}^2 + r_{13}^2 + 2 \cdot r_{12} \cdot r_{13} \cdot r_{23}}{1 - r_{23}^2}}\tag{2}$$
+
+where $$r_{12} = \text{corr}(x, \cos \theta), \,r_{13} = \text{corr}(x, \sin \theta), \,\text{and} \, r_{23} = \text{corr}(\cos \theta, \sin \theta) \quad$$ $corr$ function refers to the Pearson's r formula in \eqref{eq:corr} (Mardia, 1976)
+
+# III. Effect Sizes
 
 ```{r}
 #| include: false
@@ -52,10 +65,10 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ## Function for calculating the circular linear correlation
 circular_cor <- function(x, y, rads = TRUE) {
   circlin.cor <- circlin.cor(x, y, rads = rads)
-  R_squared <- circlin.cor[, 1]
-  Pearsons_r <- sqrt(R_squared) 
+  R.squared <- circlin.cor[, 1]
+  Circlin.R <- sqrt(R.squared)
   ## Applicable based on the characteristic of the simple linear regression
-  return(data.frame(Pearsons_r = Pearsons_r, R_squared = R_squared))
+  return(data.frame(Circlin.R = Circlin.R, R.squared = R.squared))
 }
 ```
 
@@ -133,7 +146,7 @@ Schreiner2021addtl <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-
 #| echo: false
 ## Calculate the circular linear correlation
 sch_phase <- circular_cor(Schreiner2021$phase, Schreiner2021$retention)
-## knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memory Pearson's r Correlation Table",row.names = FALSE)
+## knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memory Circlin R Correlation Table",row.names = FALSE)
 ```
 
 ```{r}
@@ -172,7 +185,6 @@ cor2 <- cor(Schreiner2021addtl_rem$cpstr ~ Schreiner2021_rem$retention, use = "c
 
 ```
 
-
 ```{r}
 #| warning: false
 #| message: false
@@ -190,13 +202,12 @@ cor4 <- cor(sosppct ~ retention, use = "complete", data = Schreiner2021_rem)
 ## cortable("Schreiner", 4, flip = FALSE, "SPcSO" = cor3, "SOcSP" = cor4)
 ```
 
-
 ```{r}
 #| warning: false
 #| message: false
 #| echo: false
 effect_size <- rbind(sch_phase, cor1, cor2, cor3, cor4)
-knitr::kable(data.frame("Phase" = sch_phase, "Amplitude" = cor1, "Strength" = cor2, "SPcSO" = cor3, "SOcSP" = cor4), format = "markdown", caption = "Schreiner Coupling and Memory Pearson's r Correlation Table", row.names = FALSE)
+knitr::kable(data.frame("Phase" = sch_phase, "Amplitude" = cor1, "Strength" = cor2, "SPcSO" = cor3, "SOcSP" = cor4), format = "markdown", caption = "Schreiner 2021 Coupling and Memory Correlation Table", row.names = FALSE)
 ```
 
 ```{r}
@@ -256,7 +267,7 @@ es_n3 <- rbind(es_n3, ev_n3)
 }
 effect_size <- rbind(es_n2, es_n3)
 rownames(effect_size) <- c("N2 Neutral", "N2 Emotional", "N2 Weighted","N3 Neutral", "N3 Emotional", "N3 Weighted")
-knitr::kable(effect_size, format = "markdown", caption = "Denis 2021a CP Phase and Memory Pearson's r Correlation Table")
+knitr::kable(effect_size, format = "markdown", caption = "Denis 2021 CP Phase and Memory Circular Linear Correlation Table")
 ```
 
 ```{r}
@@ -274,7 +285,7 @@ cor_n3 <- c(
   Emotional = cor(emo_hit_fa ~ n3_fast_amplitude, use = "complete", data = Denis2021a_amp_rem),
   Weighted = cor(avg_hit_fa ~ n3_fast_amplitude, use = "complete", data = Denis2021a_amp_rem)
 )
-cortable("Denis 2021a", 2, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
+cortable("Denis 2021", 2, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
 ```
 
 ```{r}
@@ -292,7 +303,7 @@ cor_n3 <- c(
   Emotional = cor(emo_hit_fa ~ n3_fast_consistency, use = "complete", data = Denis2021a_str_rem),
   Weighted = cor(avg_hit_fa ~ n3_fast_consistency, use = "complete", data = Denis2021a_str_rem)
 )
-cortable("Denis 2021a", 3, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
+cortable("Denis 2021", 3, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
 ```
 
 ```{r}
@@ -310,7 +321,7 @@ cor_n3 <- c(
   Emotional = cor(emo_hit_fa ~ n3_fast_ss_coupled_percent, use = "complete", data = Denis2021a_per_rem),
   Weighted = cor(avg_hit_fa ~ n3_fast_ss_coupled_percent, use = "complete", data = Denis2021a_per_rem)
 )
-cortable("Denis 2021a", 4, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
+cortable("Denis 2021", 4, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
 ```
 
 ```{r}
@@ -340,6 +351,8 @@ cortable("Denis 2021a", 4, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
 rm(list = ls())
 load("preprocessing_fun.RData")
 ```
+
+\newpage
 
 ## Hahn2020
 
@@ -400,7 +413,7 @@ for (var in variables) {
   effect_sizech <- rbind(effect_sizech, effect_varch)
 }
 rownames(effect_sizech) <- c("Frontal", "Central", "Parietal and Occipital")
-knitr::kable(effect_sizech, format = "markdown", caption = "Hahn Child CP Phase and Memory Pearson's r Correlation Table")
+knitr::kable(effect_sizech, format = "markdown", caption = "Hahn 2020 Child CP Phase and Memory Circular Linear Correlation Table")
 ```
 
 ```{r}
@@ -415,7 +428,7 @@ for (var in variables) {
   effect_sizead <- rbind(effect_sizead, effect_varad)
 }
 rownames(effect_sizead) <- c("Frontal", "Central", "Parietal and Occipital")
-knitr::kable(effect_sizead, format = "markdown", caption = "Hahn Adolescent CP Phase and Memory Pearson's r Correlation Table")
+knitr::kable(effect_sizead, format = "markdown", caption = "Hahn 2020 Adolescent CP Phase and Memory Circular Linear Correlation Table")
 ```
 
 ```{r}
@@ -478,7 +491,7 @@ cor_ad <- c(
 )
 
 # Create the table
-cortable("Hahn", 2, flip = FALSE, Child = cor_ch, Adolescent = cor_ad)
+cortable("Hahn 2020", 2, flip = FALSE, Child = cor_ch, Adolescent = cor_ad)
 ```
 
 ```{r}
@@ -541,7 +554,7 @@ cor_ad <- c(
 )
 
 # Create the table
-cortable("Hahn", 3, flip = FALSE, Child = cor_ch, Adolescent = cor_ad)
+cortable("Hahn 2020", 3, flip = FALSE, Child = cor_ch, Adolescent = cor_ad)
 ```
 
 ```{r}
@@ -576,7 +589,7 @@ cor_ad <- c(
 )
 
 # Create the table
-cortable("Hahn", 4, Child = cor_ch, Adolescent = cor_ad)
+cortable("Hahn 2020", 4, Child = cor_ch, Adolescent = cor_ad)
 ```
 
 ```{r}
@@ -617,7 +630,7 @@ for (var in variables) {
   effect_size <- rbind(effect_size, effect_var)
 }
 rownames(effect_size) <- c("Slow Frontal", "Slow Central", "Slow Parietal","Fast Frontal", "Fast Central", "Fast Parietal")
-knitr::kable(effect_size, format = "markdown", caption = "Kurz CP Phase and Memory Pearson's r Correlation Table")
+knitr::kable(effect_size, format = "markdown", caption = "Kurz 2023 CP Phase and Memory Circular Linear Correlation Table")
 ## n = 30
 ```
 
@@ -648,7 +661,7 @@ cor_slow <- c(
   "Parietal" = cor(DRM_correct ~ SP_amplitude_NonREM_slow_parietal, use = "complete", data = Kurz2023amp))
 
 # Create the table
-cortable("Kurz", 2, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
+cortable("Kurz 2023", 2, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
 ```
 
 ```{r}
@@ -678,7 +691,7 @@ cor_slow <- c(
   "Parietal" = cor(DRM_correct ~ CouplStrengthOnlyCoupl_slow_parietal, use = "complete", data = Kurz2023str))
 
 # Create the table
-cortable("Kurz", 3, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
+cortable("Kurz 2023", 3, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
 ```
 
 ```{r}
@@ -769,7 +782,7 @@ for (var in variables) {
   effect_size <- rbind(effect_size, effect_var)
 }
 rownames(effect_size) <- c("Frontal", "Central", "Parietal and Occipital")
-knitr::kable(effect_size, format = "markdown", caption = "Donnelly CP Phase and Memory Pearson's r Correlation Table")
+knitr::kable(effect_size, format = "markdown", caption = "Donnelly 2022 CP Phase and Memory Circular Linear Correlation Table")
 ```
 
 ```{r}
@@ -811,9 +824,9 @@ Donnelly_beh_amp <- Donnelly_beh[-3, ]
 cor <- c(
   "Frontal" = cor(Donnelly_beh_amp$retention ~ Donnellyamp_avg$Favg, use = "complete"),
   "Central" = cor(Donnelly_beh_amp$retention ~ Donnellyamp_avg$Cavg, use = "complete"),
-  "Parietal" = cor(Donnelly_beh_amp$retention ~ Donnellyamp_avg$POavg, use = "complete"))
+  "Parietal and Occipital" = cor(Donnelly_beh_amp$retention ~ Donnellyamp_avg$POavg, use = "complete"))
 
-cortable("Donnelly", 2, "Correlation" = cor)
+cortable("Donnelly 2022", 2, "Correlation" = cor)
 ```
 
 ```{r}
@@ -855,9 +868,9 @@ Donnellystr_avg <- remove_outliers(Donnellystr_avg, scale_columns = c("Favg", "C
 cor <- c(
   "Frontal" = cor(Donnelly_beh$retention ~ Donnellystr_avg$Favg, use = "complete"),
   "Central" = cor(Donnelly_beh$retention ~ Donnellystr_avg$Cavg, use = "complete"),
-  "Parietal" = cor(Donnelly_beh$retention ~ Donnellystr_avg$POavg, use = "complete"))
+  "Parietal and Occipital" = cor(Donnelly_beh$retention ~ Donnellystr_avg$POavg, use = "complete"))
 
-cortable("Donnelly", 3, "Correlation" = cor)
+cortable("Donnelly 2022", 3, "Correlation" = cor)
 ```
 
 ```{r}
@@ -934,8 +947,8 @@ ev_slow <- circular_cor(slow_phase_avg[[var]], behaviour_slow$change_pres)
 es_slow <- rbind(es_slow, ev_slow)
 }
 effect_size <- rbind(es_slow, es_fast)
-rownames(effect_size) <- c("Slow Frontal", "Slow Central", "Slow Parietal","Fast Frontal", "Fast Central", "Fast Parietal")
-knitr::kable(effect_size, format = "markdown", caption = "Denis CP Phase and Memory Pearson's r Correlation Table")
+rownames(effect_size) <- c("Slow Frontal", "Slow Central", "Slow Parietal and Occipital","Fast Frontal", "Fast Central", "Fast Parietal and Occipital")
+knitr::kable(effect_size, format = "markdown", caption = "Denis 2022 CP Phase and Memory Circular Linear Correlation Table")
 ```
 
 ```{r}
@@ -959,7 +972,6 @@ mutate(
 ## view(slow_amplitude_avg)
 ```
 
-
 ```{r}
 #| warning: false
 #| message: false
@@ -968,16 +980,16 @@ mutate(
 cor_fast <- c(
   "Frontal" = cor(behaviour_fast$change_pres ~ fast_amplitude_avg$Favg, use = "complete"),
   "Central" = cor(behaviour_fast$change_pres ~ fast_amplitude_avg$Cavg, use = "complete"),
-  "Parietal" = cor(behaviour_fast$change_pres ~ fast_amplitude_avg$POavg, use = "complete"))
+  "Parietal and Occipital" = cor(behaviour_fast$change_pres ~ fast_amplitude_avg$POavg, use = "complete"))
 
 # Calculate correlation coefficients between slow spindles and memory in each channel location
 cor_slow <- c(
   "Frontal" = cor(behaviour_slow$change_pres ~ slow_amplitude_avg$Favg, use = "complete"),
   "Central" = cor(behaviour_slow$change_pres ~ slow_amplitude_avg$Cavg, use = "complete"),
-  "Parietal" = cor(behaviour_slow$change_pres ~ slow_amplitude_avg$POavg, use = "complete"))
+  "Parietal and Occipital" = cor(behaviour_slow$change_pres ~ slow_amplitude_avg$POavg, use = "complete"))
 
 # Create the table
-cortable("Denis", 2, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
+cortable("Denis 2022", 2, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
 ```
 
 ```{r}
@@ -1001,7 +1013,6 @@ mutate(
 ## view(slow_consistency_avg)
 ```
 
-
 ```{r}
 #| warning: false
 #| message: false
@@ -1010,16 +1021,16 @@ mutate(
 cor_fast <- c(
   "Frontal" = cor(behaviour_fast$change_pres ~ fast_consistency_avg$Favg, use = "complete"),
   "Central" = cor(behaviour_fast$change_pres ~ fast_consistency_avg$Cavg, use = "complete"),
-  "Parietal" = cor(behaviour_fast$change_pres ~ fast_consistency_avg$POavg, use = "complete"))
+  "Parietal and Occipital" = cor(behaviour_fast$change_pres ~ fast_consistency_avg$POavg, use = "complete"))
 
 # Calculate correlation coefficients between slow spindles and memory in each channel location
 cor_slow <- c(
   "Frontal" = cor(behaviour_slow$change_pres ~ slow_consistency_avg$Favg, use = "complete"),
   "Central" = cor(behaviour_slow$change_pres ~ slow_consistency_avg$Cavg, use = "complete"),
-  "Parietal" = cor(behaviour_slow$change_pres ~ slow_consistency_avg$POavg, use = "complete"))
+  "Parietal and Occipital" = cor(behaviour_slow$change_pres ~ slow_consistency_avg$POavg, use = "complete"))
 
 # Create the table
-cortable("Denis", 3, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
+cortable("Denis 2022", 3, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
 ```
 
 ```{r}
@@ -1043,7 +1054,6 @@ mutate(
 ## view(slow_percent_avg)
 ```
 
-
 ```{r}
 #| warning: false
 #| message: false
@@ -1052,16 +1062,16 @@ mutate(
 cor_fast <- c(
   "Frontal" = cor(behaviour_fast$change_pres ~ fast_percent_avg$Favg, use = "complete"),
   "Central" = cor(behaviour_fast$change_pres ~ fast_percent_avg$Cavg, use = "complete"),
-  "Parietal" = cor(behaviour_fast$change_pres ~ fast_percent_avg$POavg, use = "complete"))
+  "Parietal and Occipital" = cor(behaviour_fast$change_pres ~ fast_percent_avg$POavg, use = "complete"))
 
 # Calculate correlation coefficients between slow spindles and memory in each channel location
 cor_slow <- c(
   "Frontal" = cor(behaviour_slow$change_pres ~ slow_percent_avg$Favg, use = "complete"),
   "Central" = cor(behaviour_slow$change_pres ~ slow_percent_avg$Cavg, use = "complete"),
-  "Parietal" = cor(behaviour_slow$change_pres ~ slow_percent_avg$POavg, use = "complete"))
+  "Parietal and Occipital" = cor(behaviour_slow$change_pres ~ slow_percent_avg$POavg, use = "complete"))
 
 # Create the table
-cortable("Denis", 4, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
+cortable("Denis 2022", 4, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
 ```
 
 ```{r}
@@ -1093,7 +1103,7 @@ Mylonas2020cp <- Mylonas2020[-22, ]
 #| include: false
 ## Calculate the circular linear correlation
 mylonas_phase <- circular_cor(Mylonas2020cp$Preferred.Phase..degrees., Mylonas2020cp$Memory.Change....)
-## knitr::kable(sch_phase,format ="markdown",caption ="Mylonas 2020 CP Phase and Memory Pearson's r Correlation Table",row.names = FALSE)
+## knitr::kable(sch_phase,format ="markdown",caption ="Mylonas 2020 CP Phase and Memory Circular Linear Correlation Table",row.names = FALSE)
 ```
 
 ```{r}
@@ -1132,7 +1142,7 @@ cor4 <- cor(X..of.SOs.coupled.to.spindles ~ Memory.Change...., use = "complete",
 #| message: false
 #| echo: false
 effect_size <- rbind(mylonas_phase, cor1, cor2, cor3, cor4)
-knitr::kable(data.frame("Phase" = mylonas_phase, "Amplitude" = cor1, "Strength" = cor2, "SPcSO" = cor3, "SOcSP" = cor4), format = "markdown", caption = "Mylonas 2020 Coupling and Memory Pearson's r Correlation Table", row.names = FALSE)
+knitr::kable(data.frame("Phase" = mylonas_phase, "Amplitude" = cor1, "Strength" = cor2, "SPcSO" = cor3, "SOcSP" = cor4), format = "markdown", caption = "Mylonas 2020 Coupling and Memory Correlation Table", row.names = FALSE)
 ```
 
 ```{r}
@@ -1143,3 +1153,42 @@ knitr::kable(data.frame("Phase" = mylonas_phase, "Amplitude" = cor1, "Strength" 
 rm(list = ls())
 load("preprocessing_fun.RData")
 ```
+
+## Hahn2022
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Import source data from Hahn2022
+Hahn_phasead <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2022/Sourcedata/phase_adolescent.csv")
+Hahn_phaseya <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2022/Sourcedata/phase_adult.csv")
+view(Hahn_phasead)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+cor_ad <- c(
+  Frontal = mean(Hahn_phasead$rho_baseskillchange[Hahn_phasead$Electrode %in% c("F3", "F4", "Fz")]),
+  Central = mean(Hahn_phasead$rho_baseskillchange[Hahn_phasead$Electrode %in% c("C3", "C4", "Cz")]),
+  "Parietal and Occipital" = mean(Hahn_phasead$rho_baseskillchange[Hahn_phasead$Electrode %in% c("P3", "P4", "Pz", "O1", "O2")])
+)
+
+cor_ya <- c(
+  Frontal = mean(Hahn_phaseya$rho_baseskillchange[Hahn_phaseya$Electrode %in% c("F3", "F4", "Fz")]),
+  Central = mean(Hahn_phaseya$rho_baseskillchange[Hahn_phaseya$Electrode %in% c("C3", "C4", "Cz")]),
+  "Parietal and Occipital" = mean(Hahn_phaseya$rho_baseskillchange[Hahn_phaseya$Electrode %in% c("P3", "P4", "Pz", "O1", "O2")])
+)
+effect_size <- data.frame("Adolescent" = cor_ad, "Young Adult" = cor_ya)
+knitr::kable(effect_size, format = "markdown", caption = "Hahn 2022 CP Phase and Memory Circular Linear Correlation Table")
+```
+
+# IV. References
+
+1.  Mardia, K. V. (1976). Linear-Circular Correlation Coefficients and Rhythmometry. *Biometrika,* 63(2), 403--405. <https://doi.org/10.2307/2335637>
+
+2.  Posit Team (2023). RStudio: Integrated Development for R. *Posit Software, PBC, Boston, MA. *<http://www.rstudio.com/>.
+
+3.  R Core Team (2022). R: A language and environment for statistical computing. *R Foundation for Statistical Computing, Vienna, Austria.* <https://www.R-project.org/>.
