@@ -6,6 +6,7 @@ author: "Author"
 date: "2023-08-10"
 date-format: iso
 toc: true
+toc-title: Table of Contents
 ---
 
 ```{r}
@@ -42,7 +43,7 @@ All studies that provided processed individual sleep and memory measurement data
 
 \newpage
 
-In cases where meta-analysis authors reached out to the original study authors via email to obtain effect sizes, if the original study authors chose to provide processed individual datasets rather than reporting effect sizes directly, neither party requested or exchanged any information that could potentially expose the personal identities of individual participants. The data may have been sorted, merged or excluded based on the methods outlined in the original studies and the moderator selection in the meta-analysis. All data processing was performed within the Quarto document of R Studio version 2023.6.1.524. (Posit Team, 2023) Not all effect sizes reported in this material will necessarily be used in the meta-analysis, contingent upon the inclusion criteria and moderators.
+In cases where meta-analysis authors reached out to the original study authors via email to obtain effect sizes, if the original study authors chose to provide processed individual datasets rather than reporting effect sizes directly, neither party requested or exchanged any information that could potentially expose the personal identities of individual participants. The data may have been sorted, merged or excluded based on the methods outlined in the original studies and the moderator selection in the meta-analysis. All data processing was performed within the Quarto document of R Studio version 2023.6.1.524 (Posit Team, 2023) using the R language (R Core Team, 2022) Not all effect sizes reported in this material will necessarily be used in the meta-analysis, contingent upon the inclusion criteria and moderators.
 
 # II. Formulas
 
