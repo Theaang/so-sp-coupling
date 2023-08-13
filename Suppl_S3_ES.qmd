@@ -22,15 +22,8 @@ library(kableExtra)
 library(tidyr)
 library(Stat2Data)
 library(dplyr)
-library(meta)
-library(metafor)
-library(dmetar)
 library(metaDigitise)
-library(ICC)
-library(wildmeta)
-library(future)
 library(shinyDigitise)
-library(CircStats)
 library(Directional)
 options(digits = 4)
 knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
@@ -362,7 +355,7 @@ load("preprocessing_fun.RData")
 #| message: false
 #| include: false
 ## Import source data from Hahn 2020
-Hahn_beh <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/behaviorals.csv", show_col_types = FALSE)
+Hahn_beh_row <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/behaviorals.csv", show_col_types = FALSE)
 Hahn_chphase <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/child_phase.csv", show_col_types = FALSE)
 Hahn_champ <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/child_amplitude.csv", show_col_types = FALSE)
 Hahn_chstr <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2020/Source%20Data/child_strength.csv", show_col_types = FALSE)
@@ -378,6 +371,9 @@ Hahn_pct <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/m
 #> view(Hahn_adamp)
 #> view(Hahn_adstr)
 #> view(Hahn_pct)
+Hahn_beh <- Hahn_beh_row |>
+  mutate(ch_diffs = (ch_delay/ch_immed),
+         ad_diffs = (ad_delay/ad_immed))
 ```
 
 ```{r}
@@ -410,7 +406,7 @@ Hahn_adphase <- Hahn_adphase |>
 variables <- c("Favg", "Cavg", "POavg")
 effect_sizech <- data.frame()
 for (var in variables) {
-  effect_varch <- circular_cor(Hahn_chphase[[var]], Hahn_beh$ch_diff)
+  effect_varch <- circular_cor(Hahn_chphase[[var]], Hahn_beh$ch_diffs)
   effect_sizech <- rbind(effect_sizech, effect_varch)
 }
 rownames(effect_sizech) <- c("Frontal", "Central", "Parietal and Occipital")
@@ -425,7 +421,7 @@ knitr::kable(effect_sizech, format = "markdown", caption = "Hahn 2020 Child CP P
 variables <- c("Favg", "Cavg", "POavg")
 effect_sizead <- data.frame()
 for (var in variables) {
-  effect_varad <- circular_cor(Hahn_adphase[[var]], Hahn_beh$ad_diff)
+  effect_varad <- circular_cor(Hahn_adphase[[var]], Hahn_beh$ad_diffs)
   effect_sizead <- rbind(effect_sizead, effect_varad)
 }
 rownames(effect_sizead) <- c("Frontal", "Central", "Parietal and Occipital")
@@ -479,16 +475,16 @@ Hahn_adbeh_rem <- adresult$memory_rem
 #| echo: false
 # Calculate correlation coefficients for the child group in each channel location
 cor_ch <- c(
-  Frontal = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_champ_rem$Favg, use = "complete"),
-  Central = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_champ_rem$Cavg, use = "complete"),
-  "Parietal and Occipital" = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_champ_rem$POavg, use = "complete")
+  Frontal = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_champ_rem$Favg, use = "complete"),
+  Central = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_champ_rem$Cavg, use = "complete"),
+  "Parietal and Occipital" = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_champ_rem$POavg, use = "complete")
 )
 
 # Calculate correlation coefficients for the adolescent group in each channel location
 cor_ad <- c(
-  Frontal = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adamp_rem$Favg, use = "complete"),
-  Central = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adamp_rem$Cavg, use = "complete"),
-  "Parietal and Occipital" = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adamp_rem$POavg, use = "complete")
+  Frontal = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adamp_rem$Favg, use = "complete"),
+  Central = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adamp_rem$Cavg, use = "complete"),
+  "Parietal and Occipital" = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adamp_rem$POavg, use = "complete")
 )
 
 # Create the table
@@ -542,16 +538,16 @@ Hahn_adbeh_rem <- adresult$memory_rem
 #| echo: false
 # Calculate correlation coefficients for the child group in each channel location
 cor_ch <- c(
-  Frontal = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_chstr_rem$Favg, use = "complete"),
-  Central = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_chstr_rem$Cavg, use = "complete"),
-  "Parietal and Occipital" = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_chstr_rem$POavg, use = "complete")
+  Frontal = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_chstr_rem$Favg, use = "complete"),
+  Central = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_chstr_rem$Cavg, use = "complete"),
+  "Parietal and Occipital" = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_chstr_rem$POavg, use = "complete")
 )
 
 # Calculate correlation coefficients for the adolescent group in each channel location
 cor_ad <- c(
-  Frontal = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adstr_rem$Favg, use = "complete"),
-  Central = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adstr_rem$Cavg, use = "complete"),
-  "Parietal and Occipital" = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adstr_rem$POavg, use = "complete")
+  Frontal = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adstr_rem$Favg, use = "complete"),
+  Central = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adstr_rem$Cavg, use = "complete"),
+  "Parietal and Occipital" = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adstr_rem$POavg, use = "complete")
 )
 
 # Create the table
@@ -579,14 +575,14 @@ Hahn_adbeh_rem <- adpct$memory_rem
 #| echo: false
 # Calculate correlation coefficients for the child group in each sleep stage
 cor_ch <- c(
-  N2 = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_chpct_rem$ch_n2, use = "complete"),
-  N3 = cor(Hahn_chbeh_rem$ch_diff ~ Hahn_chpct_rem$ch_n3, use = "complete")
+  N2 = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_chpct_rem$ch_n2, use = "complete"),
+  N3 = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_chpct_rem$ch_n3, use = "complete")
 )
 
 # Calculate correlation coefficients for the adolescent group in each sleep stage
 cor_ad <- c(
-  N2 = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adpct_rem$ad_n2, use = "complete"),
-  N3 = cor(Hahn_adbeh_rem$ad_diff ~ Hahn_adpct_rem$ad_n3, use = "complete")
+  N2 = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adpct_rem$ad_n2, use = "complete"),
+  N3 = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adpct_rem$ad_n3, use = "complete")
 )
 
 # Create the table
@@ -615,7 +611,7 @@ Kurz2023_raw <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupli
 Kurz2023 <- Kurz2023_raw |>
   filter(Condition == "Sleep" & rowSums(is.na(cur_data()[, 46:84])) == 0) |>
   dplyr::select(7,46:84)
-view(Kurz2023)
+## view(Kurz2023)
 ```
 
 ```{r}
@@ -739,7 +735,7 @@ Donnellyphase_raw <- Donnelly2022[[21]]
 # Exclude participants from the patient group and missing values
 Donnelly_beh <- Donnelly_behrow |>
   filter(group == "Sib") |>
-  mutate(retention = accC_morning - accC_evening) |>
+  mutate(retention = accC_morning/accC_evening) |>
   filter(rowSums(is.na(cur_data()[, 26:27])) == 0)
 #> view(Donnelly_beh)
 ```
@@ -1184,6 +1180,73 @@ cor_ya <- c(
 )
 effect_size <- data.frame("Adolescent" = cor_ad, "Young Adult" = cor_ya)
 knitr::kable(effect_size, format = "markdown", caption = "Hahn 2022 CP Phase and Memory Circular Linear Correlation Table")
+```
+
+## Mylonas2022
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Import source data from Mylonas2020
+Mylonas2022 <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Mylonas2022/Sourcedata/BCH_data.csv")
+Mylonas2022 <- Mylonas2022[-c(1, 2, 3, 12), ]
+view(Mylonas2022)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Calculate the circular linear correlation
+mylonas_phase <- circular_cor(Mylonas2022$Preferred.Phase..degrees., Mylonas2022$Memory.Change....)
+## knitr::kable(sch_phase,format ="markdown",caption ="Mylonas 2020 CP Phase and Memory Circular Linear Correlation Table",row.names = FALSE)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Calculate the coupling percentage and remove outlier(s)
+Mylonas2022amp <- remove_outliers(Mylonas2022, scale_columns = "Spindle.Amplitude..muV.")
+Mylonas2022str <- remove_outliers(Mylonas2022, scale_columns = "Coupling.Strength")
+Mylonas2022pct <- remove_outliers(Mylonas2022, scale_columns = "X..of.Spindles.Coupled.to.SOs")
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+cor1 <- cor(Spindle.Amplitude..muV. ~ Memory.Change...., use = "complete", data = Mylonas2022amp)
+## cortable("Mylonas 2020", 2, flip = FALSE, "Correlation" = cor1)
+cor2 <- cor(Coupling.Strength ~ Memory.Change...., use = "complete", data = Mylonas2022str)
+## cortable("Mylonas 2020", 3, flip = FALSE, "Correlation" = cor2)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Calculate the linear correlation between SP coupled SO and memory retention
+cor3 <- cor(X..of.Spindles.Coupled.to.SOs ~ Memory.Change...., use = "complete", data = Mylonas2022pct)
+## cortable("Mylonas 2020", 4, flip = FALSE, "SPcSO" = cor3)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+effect_size <- rbind(mylonas_phase, cor1, cor2, cor3)
+knitr::kable(data.frame("Phase" = mylonas_phase, "Amplitude" = cor1, "Strength" = cor2, "SPcSO" = cor3), format = "markdown", caption = "Mylonas 2022 Coupling and Memory Correlation Table", row.names = FALSE)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
 ```
 
 # IV. References
