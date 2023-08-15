@@ -34,8 +34,6 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 
 All studies that provided processed individual sleep and memory measurement data by authors have undergone preprocessing or reanalysis to estimate correlation coefficients using standardized measurement methods selected for the meta-analysis. We are unable to disclose the source data due to copyright restrictions associated with the original studies. Instead, we will directly report the preprocessed effect sizes and formulas used. Individuals or groups who are interested in any source dataset should contact the authors of the original studies directly.
 
-\newpage
-
 In cases where meta-analysis authors reached out to the original study authors via email to obtain effect sizes, if the original study authors chose to provide processed individual datasets rather than reporting effect sizes directly, neither party requested or exchanged any information that could potentially expose the personal identities of individual participants. The data may have been sorted, merged or excluded based on the methods outlined in the original studies and the moderator selection in the meta-analysis. All data processing was performed within the Quarto document of R Studio version 2023.6.1.524 (Posit Team, 2023) using the R language (R Core Team, 2022) Not all effect sizes reported in this material will necessarily be used in the meta-analysis, contingent upon the inclusion criteria and moderators.
 
 # II. Formulas
@@ -50,6 +48,10 @@ $$ r = \frac{\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})}
 $$R = \sqrt{\frac{r_{12}^2 + r_{13}^2 + 2 \cdot r_{12} \cdot r_{13} \cdot r_{23}}{1 - r_{23}^2}}\tag{2}$$
 
 where $$r_{12} = \text{corr}(x, \cos \theta), \,r_{13} = \text{corr}(x, \sin \theta), \,\text{and} \, r_{23} = \text{corr}(\cos \theta, \sin \theta) \quad$$ $corr$ function refers to the Pearson's r formula in \eqref{eq:corr} (Mardia, 1976)
+
+## Declarative Memory Retention Rate
+
+$$ MRR(\%) = \frac{Recall_\text{post.sleep} }{Recall_\text{pre.sleep} } \ \times \ 100 \% \tag{3}$$
 
 # III. Effect Sizes
 
@@ -144,11 +146,6 @@ sch_phase <- circular_cor(Schreiner2021$phase, Schreiner2021$retention)
 ```
 
 ```{r}
-#| include: false
-## knitr::kable(result, format = "markdown")
-```
-
-```{r}
 #| warning: false
 #| message: false
 #| include: false
@@ -201,7 +198,52 @@ cor4 <- cor(sosppct ~ retention, use = "complete", data = Schreiner2021_rem)
 #| message: false
 #| echo: false
 effect_size <- rbind(sch_phase, cor1, cor2, cor3, cor4)
-knitr::kable(data.frame("Phase" = sch_phase, "Amplitude" = cor1, "Strength" = cor2, "SPcSO" = cor3, "SOcSP" = cor4), format = "markdown", caption = "Schreiner 2021 Coupling and Memory Correlation Table", row.names = FALSE)
+knitr::kable(data.frame("Phase" = sch_phase, "Amplitude" = cor1, "Strength" = cor2, "SPcSO" = cor3, "SOcSP" = cor4), format = "markdown", caption = "Schreiner 2021 Coupling and Memory Correlation Table (WIP)", row.names = FALSE)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+## Calculate the circular linear correlation
+sch_phase <- circular_cor(Schreiner2021$phase, Schreiner2021$retention_hit)
+## knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memory Circlin R Correlation Table",row.names = FALSE)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+cor1 <- cor(Schreiner2021addtl_rem$spamp ~ Schreiner2021_rem$retention_hit, use = "complete")
+## cortable("Schreiner", 2, flip = FALSE, "Correlation" = cor1)
+cor2 <- cor(Schreiner2021addtl_rem$cpstr ~ Schreiner2021_rem$retention_hit, use = "complete")
+## cortable("Schreiner", 3, flip = FALSE, "Correlation" = cor2)
+
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Calculate summary statistics for the coupling percentage
+favstats(~ spsopct, data = Schreiner2021_rem)
+favstats(~ sosppct, data = Schreiner2021_rem)
+## Test the normality condition for further interpretation
+shapiro.test(Schreiner2021_rem$spsopct)
+shapiro.test(Schreiner2021_rem$sosppct)
+## Calculate the linear correlation between SO coupled SP and memory retention
+cor3 <- cor(spsopct ~ retention_hit, use = "complete", data = Schreiner2021_rem)
+## Calculate the linear correlation between SP coupled SO and memory retention
+cor4 <- cor(sosppct ~ retention_hit, use = "complete", data = Schreiner2021_rem)
+## cortable("Schreiner", 4, flip = FALSE, "SPcSO" = cor3, "SOcSP" = cor4)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+effect_size <- rbind(sch_phase, cor1, cor2, cor3, cor4)
+knitr::kable(data.frame("Phase" = sch_phase, "Amplitude" = cor1, "Strength" = cor2, "SPcSO" = cor3, "SOcSP" = cor4), format = "markdown", caption = "Schreiner 2021 Coupling and Memory Correlation Table (TMR)", row.names = FALSE)
 ```
 
 ```{r}
@@ -261,7 +303,7 @@ es_n3 <- rbind(es_n3, ev_n3)
 }
 effect_size <- rbind(es_n2, es_n3)
 rownames(effect_size) <- c("N2 Neutral", "N2 Emotional", "N2 Weighted","N3 Neutral", "N3 Emotional", "N3 Weighted")
-knitr::kable(effect_size, format = "markdown", caption = "Denis 2021 CP Phase and Memory Circular Linear Correlation Table")
+knitr::kable(effect_size, format = "markdown", caption = "Denis 2021 (TMR) CP Phase and Memory Circular Linear Correlation Table")
 ```
 
 ```{r}
@@ -279,7 +321,7 @@ cor_n3 <- c(
   Emotional = cor(emo_hit_fa ~ n3_fast_amplitude, use = "complete", data = Denis2021a_amp_rem),
   Weighted = cor(avg_hit_fa ~ n3_fast_amplitude, use = "complete", data = Denis2021a_amp_rem)
 )
-cortable("Denis 2021", 2, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
+cortable("Denis 2021 (TMR)", 2, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
 ```
 
 ```{r}
@@ -297,7 +339,7 @@ cor_n3 <- c(
   Emotional = cor(emo_hit_fa ~ n3_fast_consistency, use = "complete", data = Denis2021a_str_rem),
   Weighted = cor(avg_hit_fa ~ n3_fast_consistency, use = "complete", data = Denis2021a_str_rem)
 )
-cortable("Denis 2021", 3, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
+cortable("Denis 2021 (TMR)", 3, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
 ```
 
 ```{r}
@@ -315,7 +357,7 @@ cor_n3 <- c(
   Emotional = cor(emo_hit_fa ~ n3_fast_ss_coupled_percent, use = "complete", data = Denis2021a_per_rem),
   Weighted = cor(avg_hit_fa ~ n3_fast_ss_coupled_percent, use = "complete", data = Denis2021a_per_rem)
 )
-cortable("Denis 2021", 4, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
+cortable("Denis 2021 (TMR)", 4, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
 ```
 
 ```{r}
@@ -345,8 +387,6 @@ cortable("Denis 2021", 4, flip = FALSE, "nREM2" = cor_n2, "nREM3" = cor_n3)
 rm(list = ls())
 load("preprocessing_fun.RData")
 ```
-
-\newpage
 
 ## Hahn2020
 
@@ -712,7 +752,6 @@ Donnelly_eeg <- readRDS(url(eeg_download, method="libcurl"))
 beh_download <- "https://github.com/Theaang/so-sp-coupling/raw/main/Paper/Donnelly2022/Sourcedata/sleep_study_beh_psych_demographic_data.rds"
 Donnelly_behrow <- readRDS(url(beh_download, method="libcurl"))
 #> view(Donnelly_eeg)
-#> view(Donnelly_behrow)
 
 ## Extract all datasets from the RDS file
 Donnelly2022 <- list()
@@ -764,7 +803,6 @@ Donnellyphase_avg <- Donnellyphase |>
     Cavg = (mean(c(C3, C4, Cz)) * pi) / 180,
     POavg = (mean(c(P3, P4, Pz, O1, O2)) * pi) / 180)
 Donnellyphase_avg <- Donnellyphase_avg[-7,]
-#> view(Donnellyphase_avg)
 ```
 
 ```{r}
@@ -1160,7 +1198,8 @@ load("preprocessing_fun.RData")
 ## Import source data from Hahn2022
 Hahn_phasead <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2022/Sourcedata/phase_adolescent.csv")
 Hahn_phaseya <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2022/Sourcedata/phase_adult.csv")
-view(Hahn_phasead)
+#> view(Hahn_phasead)
+#> view(Hahn_phaseya)
 ```
 
 ```{r}
@@ -1191,7 +1230,9 @@ knitr::kable(effect_size, format = "markdown", caption = "Hahn 2022 CP Phase and
 ## Import source data from Mylonas2020
 Mylonas2022 <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Mylonas2022/Sourcedata/BCH_data.csv")
 Mylonas2022 <- Mylonas2022[-c(1, 2, 3, 12), ]
-view(Mylonas2022)
+Mylonas2022 <- Mylonas2022 |>
+  mutate(Phase_rad = (Preferred.Phase..degrees. * pi) / 180)
+#> view(Mylonas2022)
 ```
 
 ```{r}
@@ -1199,7 +1240,7 @@ view(Mylonas2022)
 #| message: false
 #| include: false
 ## Calculate the circular linear correlation
-mylonas_phase <- circular_cor(Mylonas2022$Preferred.Phase..degrees., Mylonas2022$Memory.Change....)
+mylonas_phase <- circular_cor(Mylonas2022$Phase_rad, Mylonas2022$Memory.Change....)
 ## knitr::kable(sch_phase,format ="markdown",caption ="Mylonas 2020 CP Phase and Memory Circular Linear Correlation Table",row.names = FALSE)
 ```
 
