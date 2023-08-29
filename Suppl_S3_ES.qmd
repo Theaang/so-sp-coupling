@@ -143,6 +143,21 @@ Schreiner2021addtl <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-
 ## Calculate the circular linear correlation
 sch_phase <- circular_cor(Schreiner2021$phase, Schreiner2021$retention)
 ## knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memory Circlin R Correlation Table",row.names = FALSE)
+library(circular)
+library(reshape)
+plot(circular(Schreiner2021$phase))
+data <- data.frame(Circular = Schreiner2021$phase, Linear = Schreiner2021$retention)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE, xlim = c(-3, 3))
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+plot <- plot + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+print(plot)
 ```
 
 ```{r}
@@ -304,6 +319,35 @@ es_n3 <- rbind(es_n3, ev_n3)
 effect_size <- rbind(es_n2, es_n3)
 rownames(effect_size) <- c("N2 Neutral", "N2 Emotional", "N2 Weighted","N3 Neutral", "N3 Emotional", "N3 Weighted")
 knitr::kable(effect_size, format = "markdown", caption = "Denis 2021 (TMR) CP Phase and Memory Circular Linear Correlation Table")
+library(circular)
+plot(circular(Denis2021a$n2_fast_phase))
+plot(circular(Denis2021a$n3_fast_phase))
+
+data <- data.frame(Circular = Denis2021a$n2_fast_phase, Linear = Denis2021a$avg_hit_fa)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE, xlim = c(-3, 3))
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+plot <- plot + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+print(plot)
+
+data <- data.frame(Circular = Denis2021a$n3_fast_phase, Linear = Denis2021a$avg_hit_fa)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE, xlim = c(-3, 3))
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+plot <- plot + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+print(plot)
 ```
 
 ```{r}
@@ -412,8 +456,8 @@ Hahn_pct <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/m
 #> view(Hahn_adstr)
 #> view(Hahn_pct)
 Hahn_beh <- Hahn_beh_row |>
-  mutate(ch_diffs = (ch_delay/ch_immed),
-         ad_diffs = (ad_delay/ad_immed))
+  mutate(ch_diffs = (ch_delay/ch_immed * 100),
+         ad_diffs = (ad_delay/ad_immed * 100))
 ```
 
 ```{r}
@@ -428,7 +472,7 @@ Hahn_chphase <- Hahn_chphase |>
     Favg = mean(c(F3, Fz, F4)),
     Cavg = mean(c(C3, Cz, C4)),
     POavg = mean(c(P3, Pz, P4, O1, O2)))
-#> view(Hahn_chphase)
+view(Hahn_chphase)
 Hahn_adphase <- Hahn_adphase |>
   rowwise() |>
   mutate(
@@ -451,6 +495,21 @@ for (var in variables) {
 }
 rownames(effect_sizech) <- c("Frontal", "Central", "Parietal and Occipital")
 knitr::kable(effect_sizech, format = "markdown", caption = "Hahn 2020 Child CP Phase and Memory Circular Linear Correlation Table")
+
+data <- data.frame(Circular = Hahn_adphase$Favg, Linear = Hahn_beh$ad_diffs)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
+
+plot(circular(Hahn_chphase$Favg))
+
+
 ```
 
 ```{r}
@@ -669,6 +728,27 @@ for (var in variables) {
 rownames(effect_size) <- c("Slow Frontal", "Slow Central", "Slow Parietal","Fast Frontal", "Fast Central", "Fast Parietal")
 knitr::kable(effect_size, format = "markdown", caption = "Kurz 2023 CP Phase and Memory Circular Linear Correlation Table")
 ## n = 30
+
+plot(circular(Kurz2023$PrefPhaseOnlyCoupl_fast_frontal))
+plot(circular(Kurz2023$PrefPhaseOnlyCoupl_slow_frontal))
+
+data <- data.frame(Circular = Kurz2023$PrefPhaseOnlyCoupl_fast_frontal, Linear = Kurz2023$DRM_correct)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = TRUE)
+
+plot + labs(x = "Circular Variable", y = "Linear Variable",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit") + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+data <- data.frame(Circular = Kurz2023$PrefPhaseOnlyCoupl_slow_frontal, Linear = Kurz2023$DRM_correct)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = TRUE)
+
+plot + labs(x = "Circular Variable", y = "Linear Variable",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit") + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
 ```
 
 ```{r}
@@ -818,6 +898,22 @@ for (var in variables) {
 }
 rownames(effect_size) <- c("Frontal", "Central", "Parietal and Occipital")
 knitr::kable(effect_size, format = "markdown", caption = "Donnelly 2022 CP Phase and Memory Circular Linear Correlation Table")
+
+library(circular)
+plot(circular(Donnellyphase_avg$Favg))
+
+data <- data.frame(Circular = Donnellyphase_avg$Favg, Linear = Donnelly_beh$retention)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE, xlim = c(-3, 3))
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+plot <- plot + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+print(plot)
 ```
 
 ```{r}
@@ -984,6 +1080,26 @@ es_slow <- rbind(es_slow, ev_slow)
 effect_size <- rbind(es_slow, es_fast)
 rownames(effect_size) <- c("Slow Frontal", "Slow Central", "Slow Parietal and Occipital","Fast Frontal", "Fast Central", "Fast Parietal and Occipital")
 knitr::kable(effect_size, format = "markdown", caption = "Denis 2022 CP Phase and Memory Circular Linear Correlation Table")
+
+plot(circular(fast_phase_avg$Favg))
+
+data <- data.frame(Circular = fast_phase_avg$Favg, Linear = behaviour_fast$change_pres)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = TRUE)
+
+plot + labs(x = "Circular Variable", y = "Linear Variable",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit") + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+data <- data.frame(Circular = slow_phase_avg$Favg, Linear = behaviour_slow$change_pres)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = TRUE)
+
+plot + labs(x = "Circular Variable", y = "Linear Variable",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit") + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
 ```
 
 ```{r}
@@ -1135,10 +1251,22 @@ Mylonas2020cp <- Mylonas2020[-22, ]
 ```{r}
 #| warning: false
 #| message: false
-#| include: false
+#| echo: false
 ## Calculate the circular linear correlation
 mylonas_phase <- circular_cor(Mylonas2020cp$Preferred.Phase..degrees., Mylonas2020cp$Memory.Change....)
 ## knitr::kable(sch_phase,format ="markdown",caption ="Mylonas 2020 CP Phase and Memory Circular Linear Correlation Table",row.names = FALSE)
+plot(circular(Mylonas2020cp$Preferred.Phase..degrees.))
+
+data <- data.frame(Circular = Mylonas2020cp$Preferred.Phase..degrees., Linear = Mylonas2020cp$Memory.Change....)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
 ```
 
 ```{r}
@@ -1238,10 +1366,23 @@ Mylonas2022 <- Mylonas2022 |>
 ```{r}
 #| warning: false
 #| message: false
-#| include: false
+#| echo: false
 ## Calculate the circular linear correlation
 mylonas_phase <- circular_cor(Mylonas2022$Phase_rad, Mylonas2022$Memory.Change....)
 ## knitr::kable(sch_phase,format ="markdown",caption ="Mylonas 2020 CP Phase and Memory Circular Linear Correlation Table",row.names = FALSE)
+plot(circular(Mylonas2022$Preferred.Phase..degrees.))
+
+data <- data.frame(Circular =Mylonas2022$Phase_rad, Linear = Mylonas2022$Memory.Change....)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
+
 ```
 
 ```{r}
@@ -1288,6 +1429,232 @@ knitr::kable(data.frame("Phase" = mylonas_phase, "Amplitude" = cor1, "Strength" 
 ## Remove all unused variables
 rm(list = ls())
 load("preprocessing_fun.RData")
+```
+
+## Solano2022
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Import source data from Solano2022
+Solano_phase <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Solano2022/Sourcedata/solano_phase.csv")
+Solano_strength <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Solano2022/Sourcedata/solano_strength.csv")
+Solano_percentage <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Solano2022/Sourcedata/solano_percentage.csv")
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Coupling Phase Preprocessing
+## Calculate the mean coupling phase for each electrode location cluster
+fast2_phase_avg <- Solano_phase |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz2fast))),
+ Cavg = (mean(c(C32fast, Cz2fast, C42fast))),
+ Pavg = (mean(c(P32fast, Pz2fast, P42fast))))
+fast3_phase_avg <- Solano_phase |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz3fast))),
+ Cavg = (mean(c(C33fast, Cz3fast, C43fast))),
+ Pavg = (mean(c(P33fast, Pz3fast, P43fast))))
+slow2_phase_avg <- Solano_phase |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz2slow))),
+ Cavg = (mean(c(C32slow, Cz2slow, C42slow))),
+ Pavg = (mean(c(P32slow, Pz2slow, P42slow))))
+slow3_phase_avg <- Solano_phase |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz3slow))),
+ Cavg = (mean(c(C33slow, Cz3slow, C43slow))),
+ Pavg = (mean(c(P33slow, Pz3slow, P43slow))))
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+variables <- c("Favg", "Cavg", "Pavg")
+es_fast2 <- data.frame()
+for (var in variables) {
+ev_fast2 <- circular_cor(fast2_phase_avg[[var]], fast2_phase_avg$retention)
+es_fast2 <- rbind(es_fast2, ev_fast2)
+}
+es_fast3 <- data.frame()
+for (var in variables) {
+ev_fast3 <- circular_cor(fast3_phase_avg[[var]], fast3_phase_avg$retention)
+es_fast3 <- rbind(es_fast3, ev_fast3)
+}
+es_slow2 <- data.frame()
+for (var in variables) {
+ev_slow2 <- circular_cor(slow2_phase_avg[[var]], slow2_phase_avg$retention)
+es_slow2 <- rbind(es_slow2, ev_slow2)
+}
+es_slow3 <- data.frame()
+for (var in variables) {
+ev_slow3 <- circular_cor(slow3_phase_avg[[var]], slow3_phase_avg$retention)
+es_slow3 <- rbind(es_slow3, ev_slow3)
+}
+effect_size <- rbind(es_fast2, es_fast3, es_slow2, es_slow3)
+rownames(effect_size) <- c("Fast N2 Frontal", "Fast N2 Central", "Fast N2 Parietal","Fast N3 Frontal", "Fast N3 Central", "Fast N3 Parietal", "Slow N2 Frontal", "Slow N2 Central", "Slow N2 Parietal", "Slow N3 Frontal", "Slow N3 Central", "Slow N3 Parietal")
+  knitr::kable(effect_size, format = "markdown", caption = "Solano 2022 CP Phase and Memory Circular Linear Correlation Table")
+  plot(circular(fast3_phase_avg$Favg))
+
+data <- data.frame(Circular = fast3_phase_avg$Pavg, Linear = fast3_phase_avg$retention)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
+
+data <- data.frame(Circular = slow3_phase_avg$Favg, Linear = slow3_phase_avg$retention)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
+```
+```{r}
+data <- data.frame(Circular = fast2_phase_avg$Favg, Linear = fast2_phase_avg$retention)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
+
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+fast2_str_avg <- Solano_strength |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz2fast))),
+ Cavg = (mean(c(C32fast, Cz2fast, C42fast))),
+ Pavg = (mean(c(P32fast, Pz2fast, P42fast))))
+fast3_str_avg <- Solano_strength |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz3fast))),
+ Cavg = (mean(c(C33fast, Cz3fast, C43fast))),
+ Pavg = (mean(c(P33fast, Pz3fast, P43fast))))
+slow2_str_avg <- Solano_strength |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz2slow))),
+ Cavg = (mean(c(C32slow, Cz2slow, C42slow))),
+ Pavg = (mean(c(P32slow, Pz2slow, P42slow))))
+slow3_str_avg <- Solano_strength |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz3slow))),
+ Cavg = (mean(c(C33slow, Cz3slow, C43slow))),
+ Pavg = (mean(c(P33slow, Pz3slow, P43slow))))
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+# Calculate correlation coefficients between coupling strength and memory in each channel location
+cor_fast2 <- c(
+  "Frontal" = cor(retention ~ Favg, use = "complete", data = fast2_str_avg),
+  "Central" = cor(retention ~ Cavg, use = "complete", data = fast2_str_avg),
+  "Parietal" = cor(retention ~ Pavg, use = "complete", data = fast2_str_avg))
+
+cor_fast3 <- c(
+  "Frontal" = cor(retention ~ Favg, use = "complete", data = fast3_str_avg),
+  "Central" = cor(retention ~ Cavg, use = "complete", data = fast3_str_avg),
+  "Parietal" = cor(retention ~ Pavg, use = "complete", data = fast3_str_avg))
+
+cor_slow2 <- c(
+  "Frontal" = cor(retention ~ Favg, use = "complete", data = slow2_str_avg),
+  "Central" = cor(retention ~ Cavg, use = "complete", data = slow2_str_avg),
+  "Parietal" = cor(retention ~ Pavg, use = "complete", data = slow2_str_avg))
+
+cor_slow3 <- c(
+  "Frontal" = cor(retention ~ Favg, use = "complete", data = slow3_str_avg),
+  "Central" = cor(retention ~ Cavg, use = "complete", data = slow3_str_avg),
+  "Parietal" = cor(retention ~ Pavg, use = "complete", data = slow3_str_avg))
+# Create the table
+cortable("Solano 2022", 3, flip = FALSE, "Fast N2" = cor_fast2, "Fast N3" = cor_fast3, "Slow N2" = cor_slow2, "Slow N3" = cor_slow3)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+fast2_per_avg <- Solano_percentage |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz_fastn2))),
+ Cavg = (mean(c(C3_fastn2, Cz_fastn2, C4_fastn2))),
+ Pavg = (mean(c(P3_fastn2, Pz_fastn2, P4_fastn2))))
+fast3_per_avg <- Solano_percentage |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz_fastn3))),
+ Cavg = (mean(c(C3_fastn3, Cz_fastn3, C4_fastn3))),
+ Pavg = (mean(c(P3_fastn3, Pz_fastn3, P4_fastn3))))
+slow2_per_avg <- Solano_percentage |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz_slown2))),
+ Cavg = (mean(c(C3_slown2, Cz_slown2, C4_slown2))),
+ Pavg = (mean(c(P3_slown2, Pz_slown2, P4_slown2))))
+slow3_per_avg <- Solano_percentage |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz_slown3))),
+ Cavg = (mean(c(C3_slown3, Cz_slown3, C4_slown3))),
+ Pavg = (mean(c(P3_slown3, Pz_slown3, P4_slown3))))
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+# Calculate correlation coefficients between coupling percentage and memory in each channel location
+cor_fast2 <- c(
+  "Frontal" = cor(retention ~ Favg, use = "complete", data = fast2_per_avg),
+  "Central" = cor(retention ~ Cavg, use = "complete", data = fast2_per_avg),
+  "Parietal" = cor(retention ~ Pavg, use = "complete", data = fast2_per_avg))
+
+cor_fast3 <- c(
+  "Frontal" = cor(retention ~ Favg, use = "complete", data = fast3_per_avg),
+  "Central" = cor(retention ~ Cavg, use = "complete", data = fast3_per_avg),
+  "Parietal" = cor(retention ~ Pavg, use = "complete", data = fast3_per_avg))
+
+cor_slow2 <- c(
+  "Frontal" = cor(retention ~ Favg, use = "complete", data = slow2_per_avg),
+  "Central" = cor(retention ~ Cavg, use = "complete", data = slow2_per_avg),
+  "Parietal" = cor(retention ~ Pavg, use = "complete", data = slow2_per_avg))
+
+cor_slow3 <- c(
+  "Frontal" = cor(retention ~ Favg, use = "complete", data = slow3_per_avg),
+  "Central" = cor(retention ~ Cavg, use = "complete", data = slow3_per_avg),
+  "Parietal" = cor(retention ~ Pavg, use = "complete", data = slow3_per_avg))
+# Create the table
+cortable("Solano 2022", 4, flip = FALSE, "Fast N2" = cor_fast2, "Fast N3" = cor_fast3, "Slow N2" = cor_slow2, "Slow N3" = cor_slow3)
 ```
 
 # IV. References
