@@ -143,6 +143,21 @@ Schreiner2021addtl <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-
 ## Calculate the circular linear correlation
 sch_phase <- circular_cor(Schreiner2021$phase, Schreiner2021$retention)
 ## knitr::kable(sch_phase,format ="markdown",caption ="Schreiner CP Phase and Memory Circlin R Correlation Table",row.names = FALSE)
+library(circular)
+library(reshape)
+plot(circular(Schreiner2021$phase))
+data <- data.frame(Circular = Schreiner2021$phase, Linear = Schreiner2021$retention)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE, xlim = c(-3, 3))
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+plot <- plot + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+print(plot)
 ```
 
 ```{r}
@@ -304,6 +319,35 @@ es_n3 <- rbind(es_n3, ev_n3)
 effect_size <- rbind(es_n2, es_n3)
 rownames(effect_size) <- c("N2 Neutral", "N2 Emotional", "N2 Weighted","N3 Neutral", "N3 Emotional", "N3 Weighted")
 knitr::kable(effect_size, format = "markdown", caption = "Denis 2021 (TMR) CP Phase and Memory Circular Linear Correlation Table")
+library(circular)
+plot(circular(Denis2021a$n2_fast_phase))
+plot(circular(Denis2021a$n3_fast_phase))
+
+data <- data.frame(Circular = Denis2021a$n2_fast_phase, Linear = Denis2021a$avg_hit_fa)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE, xlim = c(-3, 3))
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+plot <- plot + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+print(plot)
+
+data <- data.frame(Circular = Denis2021a$n3_fast_phase, Linear = Denis2021a$avg_hit_fa)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE, xlim = c(-3, 3))
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+plot <- plot + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+print(plot)
 ```
 
 ```{r}
@@ -451,6 +495,21 @@ for (var in variables) {
 }
 rownames(effect_sizech) <- c("Frontal", "Central", "Parietal and Occipital")
 knitr::kable(effect_sizech, format = "markdown", caption = "Hahn 2020 Child CP Phase and Memory Circular Linear Correlation Table")
+
+data <- data.frame(Circular = Hahn_adphase$Favg, Linear = Hahn_beh$ad_diffs)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
+
+plot(circular(Hahn_chphase$Favg))
+
+
 ```
 
 ```{r}
@@ -669,6 +728,27 @@ for (var in variables) {
 rownames(effect_size) <- c("Slow Frontal", "Slow Central", "Slow Parietal","Fast Frontal", "Fast Central", "Fast Parietal")
 knitr::kable(effect_size, format = "markdown", caption = "Kurz 2023 CP Phase and Memory Circular Linear Correlation Table")
 ## n = 30
+
+plot(circular(Kurz2023$PrefPhaseOnlyCoupl_fast_frontal))
+plot(circular(Kurz2023$PrefPhaseOnlyCoupl_slow_frontal))
+
+data <- data.frame(Circular = Kurz2023$PrefPhaseOnlyCoupl_fast_frontal, Linear = Kurz2023$DRM_correct)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = TRUE)
+
+plot + labs(x = "Circular Variable", y = "Linear Variable",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit") + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+data <- data.frame(Circular = Kurz2023$PrefPhaseOnlyCoupl_slow_frontal, Linear = Kurz2023$DRM_correct)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = TRUE)
+
+plot + labs(x = "Circular Variable", y = "Linear Variable",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit") + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
 ```
 
 ```{r}
@@ -818,6 +898,22 @@ for (var in variables) {
 }
 rownames(effect_size) <- c("Frontal", "Central", "Parietal and Occipital")
 knitr::kable(effect_size, format = "markdown", caption = "Donnelly 2022 CP Phase and Memory Circular Linear Correlation Table")
+
+library(circular)
+plot(circular(Donnellyphase_avg$Favg))
+
+data <- data.frame(Circular = Donnellyphase_avg$Favg, Linear = Donnelly_beh$retention)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE, xlim = c(-3, 3))
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+plot <- plot + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+print(plot)
 ```
 
 ```{r}
@@ -984,6 +1080,26 @@ es_slow <- rbind(es_slow, ev_slow)
 effect_size <- rbind(es_slow, es_fast)
 rownames(effect_size) <- c("Slow Frontal", "Slow Central", "Slow Parietal and Occipital","Fast Frontal", "Fast Central", "Fast Parietal and Occipital")
 knitr::kable(effect_size, format = "markdown", caption = "Denis 2022 CP Phase and Memory Circular Linear Correlation Table")
+
+plot(circular(fast_phase_avg$Favg))
+
+data <- data.frame(Circular = fast_phase_avg$Favg, Linear = behaviour_fast$change_pres)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = TRUE)
+
+plot + labs(x = "Circular Variable", y = "Linear Variable",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit") + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
+
+data <- data.frame(Circular = slow_phase_avg$Favg, Linear = behaviour_slow$change_pres)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = TRUE)
+
+plot + labs(x = "Circular Variable", y = "Linear Variable",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit") + scale_x_continuous(limits = c(-3, 3), breaks = seq(-3, 3, by = 1))
 ```
 
 ```{r}
@@ -1139,6 +1255,18 @@ Mylonas2020cp <- Mylonas2020[-22, ]
 ## Calculate the circular linear correlation
 mylonas_phase <- circular_cor(Mylonas2020cp$Preferred.Phase..degrees., Mylonas2020cp$Memory.Change....)
 ## knitr::kable(sch_phase,format ="markdown",caption ="Mylonas 2020 CP Phase and Memory Circular Linear Correlation Table",row.names = FALSE)
+plot(circular(Mylonas2020cp$Preferred.Phase..degrees.))
+
+data <- data.frame(Circular = Mylonas2020cp$Preferred.Phase..degrees., Linear = Mylonas2020cp$Memory.Change....)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
 ```
 
 ```{r}
@@ -1242,6 +1370,19 @@ Mylonas2022 <- Mylonas2022 |>
 ## Calculate the circular linear correlation
 mylonas_phase <- circular_cor(Mylonas2022$Phase_rad, Mylonas2022$Memory.Change....)
 ## knitr::kable(sch_phase,format ="markdown",caption ="Mylonas 2020 CP Phase and Memory Circular Linear Correlation Table",row.names = FALSE)
+plot(circular(Mylonas2022$Preferred.Phase..degrees.))
+
+data <- data.frame(Circular =Mylonas2022$Phase_rad, Linear = Mylonas2022$Memory.Change....)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
+
 ```
 
 ```{r}
@@ -1362,6 +1503,42 @@ es_slow3 <- rbind(es_slow3, ev_slow3)
 effect_size <- rbind(es_fast2, es_fast3, es_slow2, es_slow3)
 rownames(effect_size) <- c("Fast N2 Frontal", "Fast N2 Central", "Fast N2 Parietal","Fast N3 Frontal", "Fast N3 Central", "Fast N3 Parietal", "Slow N2 Frontal", "Slow N2 Central", "Slow N2 Parietal", "Slow N3 Frontal", "Slow N3 Central", "Slow N3 Parietal")
   knitr::kable(effect_size, format = "markdown", caption = "Solano 2022 CP Phase and Memory Circular Linear Correlation Table")
+  plot(circular(fast3_phase_avg$Favg))
+
+data <- data.frame(Circular = fast3_phase_avg$Pavg, Linear = fast3_phase_avg$retention)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
+
+data <- data.frame(Circular = slow3_phase_avg$Favg, Linear = slow3_phase_avg$retention)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
+```
+```{r}
+data <- data.frame(Circular = fast2_phase_avg$Favg, Linear = fast2_phase_avg$retention)
+
+plot <- ggplot(data, aes(x = Circular, y = Linear)) +
+        geom_point(color = "blue", size = 3) +
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "red", se = FALSE)
+
+plot <- plot + labs(x = "Circular Variable", y = "Linear Variable (Adjusted)",
+                    title = "Circular-Linear Correlation Scatter Plot with Quadratic Fit")
+
+print(plot)
+
 ```
 
 ```{r}
