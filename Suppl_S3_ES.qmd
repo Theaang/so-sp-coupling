@@ -1198,6 +1198,10 @@ load("preprocessing_fun.RData")
 ## Import source data from Hahn2022
 Hahn_phasead <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2022/Sourcedata/phase_adolescent.csv")
 Hahn_phaseya <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2022/Sourcedata/phase_adult.csv")
+Hahn_ampad <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2022/Sourcedata/amplitude_adolescent.csv")
+Hahn_ampya <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2022/Sourcedata/amplitude_adult.csv")
+Hahn_strad <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2022/Sourcedata/strength_adolescent.csv")
+Hahn_strya <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Hahn2022/Sourcedata/strength_adult.csv")
 #> view(Hahn_phasead)
 #> view(Hahn_phaseya)
 ```
@@ -1219,6 +1223,76 @@ cor_ya <- c(
 )
 effect_size <- data.frame("Adolescent" = cor_ad, "Young Adult" = cor_ya)
 knitr::kable(effect_size, format = "markdown", caption = "Hahn 2022 CP Phase and Memory Circular Linear Correlation Table")
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+cor_ad <- c(
+  Frontal = mean(Hahn_ampad$rho_baseskillchange[Hahn_ampad$Electrode %in% c("F3", "F4", "Fz")]),
+  Central = mean(Hahn_ampad$rho_baseskillchange[Hahn_ampad$Electrode %in% c("C3", "C4", "Cz")]),
+  "Parietal and Occipital" = mean(Hahn_ampad$rho_baseskillchange[Hahn_ampad$Electrode %in% c("P3", "P4", "Pz", "O1", "O2")])
+)
+
+cor_ya <- c(
+  Frontal = mean(Hahn_ampya$rho_baseskillchange[Hahn_ampya$Electrode %in% c("F3", "F4", "Fz")]),
+  Central = mean(Hahn_ampya$rho_baseskillchange[Hahn_ampya$Electrode %in% c("C3", "C4", "Cz")]),
+  "Parietal and Occipital" = mean(Hahn_ampya$rho_baseskillchange[Hahn_ampya$Electrode %in% c("P3", "P4", "Pz", "O1", "O2")])
+)
+effect_size <- data.frame("Adolescent" = cor_ad, "Young Adult" = cor_ya)
+knitr::kable(effect_size, format = "markdown", caption = "Hahn 2022 SP Amplitude and Memory Circular Linear Correlation Table")
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+Hahn_strad_avg_raw <- Hahn_strad |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(F3, F4, Fz))),
+ Cavg = (mean(c(C3, C4, Cz))),
+ POavg = (mean(c(P3, P4, Pz, O1, O2))))
+Hahn_strad_avg <- remove_outliers(Hahn_strad_avg_raw, scale_columns =  c("Favg","Cavg", "POavg"))
+## view(Hahn_strad_avg)
+Hahn_strya_avg_raw <- Hahn_strya |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(F3, F4, Fz))),
+ Cavg = (mean(c(C3, C4, Cz))),
+ POavg = (mean(c(P3, P4, Pz, O1, O2))))
+Hahn_strya_avg <- remove_outliers(Hahn_strya_avg_raw, scale_columns =  c("Favg","Cavg", "POavg"))
+## view(Hahn_strya_avg)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+# Calculate correlation coefficients between coupling strength and memory in each channel location for the adolescent group
+cor_ad <- c(
+  "Frontal" = cor(Hahn_strad_avg$retention ~ Hahn_strad_avg$Favg, use = "complete"),
+  "Central" = cor(Hahn_strad_avg$retention ~ Hahn_strad_avg$Cavg, use = "complete"),
+  "Parietal and Occipital" = cor(Hahn_strad_avg$retention ~ Hahn_strad_avg$POavg, use = "complete"))
+
+# Calculate correlation coefficients between coupling strength and memory in each channel location for the young adult group
+cor_ya <- c(
+  "Frontal" = cor(Hahn_strya_avg$retention ~ Hahn_strya_avg$Favg, use = "complete"),
+  "Central" = cor(Hahn_strya_avg$retention ~ Hahn_strya_avg$Cavg, use = "complete"),
+  "Parietal and Occipital" = cor(Hahn_strya_avg$retention ~ Hahn_strya_avg$POavg, use = "complete"))
+
+# Create the table
+cortable("Hahn 2022", 3, flip = FALSE, "Adolescent" = cor_ad, "Young Adult" = cor_ya)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
 ```
 
 ## Mylonas2022
@@ -1656,29 +1730,6 @@ knitr::kable(effect_size, format = "markdown", caption = "Cox 2018 CP Phase and 
 #| warning: false
 #| message: false
 #| include: false
-## Spindle Amplitude Preprocessing
-## Detect and Remove outlier(s)
-Cox2018amp <- remove_outliers(Cox2018, scale_columns = c("sigmaFreq_slow", "sigmaFreq_fast"))
-#> view(Cox2018amp)
-```
-
-```{r}
-#| warning: false
-#| message: false
-#| echo: false
-# Calculate correlation coefficients between spindles and memory
-cor <- c(
-  "Fast Spindle" = cor(MST_improvement_perct ~ sigmaFreq_fast, use = "complete", data = Cox2018amp), 
-  "Slow Spindle" = cor(MST_improvement_perct ~ sigmaFreq_slow, use = "complete", data = Cox2018amp))
-
-# Create the table
-cortable("Cox 2018", 2, "Correlation" = cor)
-```
-
-```{r}
-#| warning: false
-#| message: false
-#| include: false
 ## Coupling Strength Preprocessing
 ## Detect and Remove outlier(s)
 Cox2018str <- remove_outliers(Cox2018, scale_columns = c("learn_N2_front_slow_coupling_strength_z_shifted", "learn_N2_front_fast_coupling_strength_z_shifted", "learn_N2_cent_slow_coupling_strength_z_shifted","learn_N2_cent_fast_coupling_strength_z_shifted", "learn_N2_post_slow_coupling_strength_z_shifted", "learn_N2_post_fast_coupling_strength_z_shifted", "learn_N3_front_slow_coupling_strength_z_shifted", "learn_N3_front_fast_coupling_strength_z_shifted", "learn_N3_cent_slow_coupling_strength_z_shifted","learn_N3_cent_fast_coupling_strength_z_shifted", "learn_N3_post_slow_coupling_strength_z_shifted", "learn_N3_post_fast_coupling_strength_z_shifted"))
@@ -1735,24 +1786,8 @@ load("preprocessing_fun.RData")
 #| warning: false
 #| message: false
 #| include: false
-## Import source data from Denis 2022
-Denis_files <- c("behaviour.csv", "fast_amplitude.csv", "slow_amplitude.csv", 
-                "fast_power.csv", "slow_power.csv", "fast_consistency.csv", 
-                "slow_consistency.csv", "fast_percent.csv", "slow_percent.csv", 
-                "fast_phase.csv", "slow_phase.csv")
-for (file in Denis_files) {
-  file_url <- paste0("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Denis2022/Sourcedata/", file)
-  data <- read.csv(file_url)
-  data <- data[-c(18, 34), ] ## Remove empty rows
-  assign(gsub(".csv", "", file), data)
-}
-behaviour_fast <- behaviour |>
-  rowwise() |>
-  mutate(
-  change_pres = change_1pres)
-## Create a separate behavior dataset for slow spindle data due to missing value
-behaviour_slow = behaviour_fast[-c(5, 7, 12, 27, 28, 32), ]
-## view(behaviour_slow)
+## Import source data from Zhang 2020
+Zhang2020 <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Zhang2020/Sourcedata/Zhang2020.csv")
 ```
 
 ```{r}
@@ -1761,123 +1796,59 @@ behaviour_slow = behaviour_fast[-c(5, 7, 12, 27, 28, 32), ]
 #| include: false
 ## Coupling Phase Preprocessing
 ## Calculate the mean coupling phase for each electrode location cluster
-fast_phase_avg <- fast_phase |>
+Zhang2020_avg <- Zhang2020 |>
 rowwise() |>
 mutate(
- Favg = (mean(c(F3, F4, Fz))),
- Cavg = (mean(c(C3, C4, Cz))),
- POavg = (mean(c(P3, P4, Pz, O1, O2))))
-## view(fast_phase_avg)
-slow_phase_avg <- slow_phase |>
-rowwise() |>
-mutate(
- Favg = (mean(c(F3, F4, Fz))),
- Cavg = (mean(c(C3, C4, Cz))),
- POavg = (mean(c(P3, P4, Pz, O1, O2)))) |>
-  filter(!any(is.na(c_across(F2:POavg))))
-## view(slow_phase_avg)
+ Favg_amp = (mean(c(F3, F4, Fz))),
+ Cavg_amp = (mean(c(C3, C4, Cz))),
+ POavg_amp = (mean(c(P3, P4, Pz, O1, O2))),
+ Favg_phase = (mean(c(F3_phase, F4_phase))),
+ Cavg_phase = (mean(c(C3_phase, C4_phase))),
+ POavg_phase = (mean(c(P3_phase, P4_phase, O1_phase, O2_phase))),
+ Favg_mi = (mean(c(F3_MI, F4_MI))),
+ Cavg_mi = (mean(c(C3_MI, C4_MI))),
+ POavg_mi = (mean(c(P3_MI, P4_MI, O1_MI, O2_MI))),
+ Favg_mvl = (mean(c(F3_MVL, F4_MVL))),
+ Cavg_mvl = (mean(c(C3_MVL, C4_MVL))),
+ POavg_mvl = (mean(c(P3_MVL, P4_MVL, O1_MVL, O2_MVL))))
+#> view(Zhang2020_avg)
 ```
 
 ```{r}
 #| warning: false
 #| message: false
 #| echo: false
-variables <- c("Favg", "Cavg", "POavg")
-es_fast <- data.frame()
+variables <- c("Favg_phase", "Cavg_phase", "POavg_phase")
+es <- data.frame()
 for (var in variables) {
-ev_fast <- circular_cor(fast_phase_avg[[var]], behaviour_fast$change_pres)
-es_fast <- rbind(es_fast, ev_fast)
+ev <- circular_cor(Zhang2020_avg[[var]], Zhang2020_avg$PBO.OVERNIGHT.RETENTION)
+es <- rbind(es, ev)
 }
-es_slow <- data.frame()
-for (var in variables) {
-ev_slow <- circular_cor(slow_phase_avg[[var]], behaviour_slow$change_pres)
-es_slow <- rbind(es_slow, ev_slow)
-}
-effect_size <- rbind(es_slow, es_fast)
-rownames(effect_size) <- c("Slow Frontal", "Slow Central", "Slow Parietal and Occipital","Fast Frontal", "Fast Central", "Fast Parietal and Occipital")
-knitr::kable(effect_size, format = "markdown", caption = "Denis 2022 CP Phase and Memory Circular Linear Correlation Table")
-```
-
-```{r}
-#| warning: false
-#| message: false
-#| include: false
-fast_amplitude_avg <- fast_amplitude |>
-rowwise() |>
-mutate(
- Favg = (mean(c(F3, F4, Fz))),
- Cavg = (mean(c(C3, C4, Cz))),
- POavg = (mean(c(P3, P4, Pz, O1, O2))))
-## view(fast_amplitude_avg)
-slow_amplitude_avg <- slow_amplitude |>
-rowwise() |>
-mutate(
- Favg = (mean(c(F3, F4, Fz))),
- Cavg = (mean(c(C3, C4, Cz))),
- POavg = (mean(c(P3, P4, Pz, O1, O2)))) |>
-  filter(!any(is.na(c_across(F2:POavg))))
-## view(slow_amplitude_avg)
+rownames(es) <- c("Frontal", "Central", "Parietal and Occipital")
+knitr::kable(es, format = "markdown", caption = "Zhang 2020 CP Phase and Memory Circular Linear Correlation Table")
 ```
 
 ```{r}
 #| warning: false
 #| message: false
 #| echo: false
-# Calculate correlation coefficients between fast spindles and memory in each channel location
-cor_fast <- c(
-  "Frontal" = cor(behaviour_fast$change_pres ~ fast_amplitude_avg$Favg, use = "complete"),
-  "Central" = cor(behaviour_fast$change_pres ~ fast_amplitude_avg$Cavg, use = "complete"),
-  "Parietal and Occipital" = cor(behaviour_fast$change_pres ~ fast_amplitude_avg$POavg, use = "complete"))
-
-# Calculate correlation coefficients between slow spindles and memory in each channel location
-cor_slow <- c(
-  "Frontal" = cor(behaviour_slow$change_pres ~ slow_amplitude_avg$Favg, use = "complete"),
-  "Central" = cor(behaviour_slow$change_pres ~ slow_amplitude_avg$Cavg, use = "complete"),
-  "Parietal and Occipital" = cor(behaviour_slow$change_pres ~ slow_amplitude_avg$POavg, use = "complete"))
+# Calculate correlation coefficients between coupling modulation index and memory in each channel location
+cor_mi <- c(
+  "Frontal" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$Favg_mi, use = "complete"),
+  "Central" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$Cavg_mi, use = "complete"),
+  "Parietal and Occipital" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$POavg_mi, use = "complete"))
 
 # Create the table
-cortable("Denis 2022", 2, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
-```
+cortable("Zhang 2020 (MI)", 3, flip = FALSE, "Correlation" = cor_mi)
 
-```{r}
-#| warning: false
-#| message: false
-#| include: false
-fast_consistency_avg <- fast_consistency |>
-rowwise() |>
-mutate(
- Favg = (mean(c(F3, F4, Fz))),
- Cavg = (mean(c(C3, C4, Cz))),
- POavg = (mean(c(P3, P4, Pz, O1, O2))))
-## view(fast_consistency_avg)
-slow_consistency_avg <- slow_consistency |>
-rowwise() |>
-mutate(
- Favg = (mean(c(F3, F4, Fz))),
- Cavg = (mean(c(C3, C4, Cz))),
- POavg = (mean(c(P3, P4, Pz, O1, O2)))) |>
-  filter(!any(is.na(c_across(F2:POavg))))
-## view(slow_consistency_avg)
-```
-
-```{r}
-#| warning: false
-#| message: false
-#| echo: false
-# Calculate correlation coefficients between fast spindles and memory in each channel location
-cor_fast <- c(
-  "Frontal" = cor(behaviour_fast$change_pres ~ fast_consistency_avg$Favg, use = "complete"),
-  "Central" = cor(behaviour_fast$change_pres ~ fast_consistency_avg$Cavg, use = "complete"),
-  "Parietal and Occipital" = cor(behaviour_fast$change_pres ~ fast_consistency_avg$POavg, use = "complete"))
-
-# Calculate correlation coefficients between slow spindles and memory in each channel location
-cor_slow <- c(
-  "Frontal" = cor(behaviour_slow$change_pres ~ slow_consistency_avg$Favg, use = "complete"),
-  "Central" = cor(behaviour_slow$change_pres ~ slow_consistency_avg$Cavg, use = "complete"),
-  "Parietal and Occipital" = cor(behaviour_slow$change_pres ~ slow_consistency_avg$POavg, use = "complete"))
+# Calculate correlation coefficients between coupling mean vector length and memory in each channel location
+cor_mvl <- c(
+  "Frontal" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$Favg_mvl, use = "complete"),
+  "Central" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$Cavg_mvl, use = "complete"),
+  "Parietal and Occipital" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$POavg_mvl, use = "complete"))
 
 # Create the table
-cortable("Denis 2022", 3, flip = FALSE, "Fast Spindle" = cor_fast, "Slow Spindle" = cor_slow)
+cortable("Zhang 2020 (MVL)", 3, flip = FALSE, "Correlation" = cor_mvl)
 ```
 
 ```{r}
@@ -1893,6 +1864,6 @@ load("preprocessing_fun.RData")
 
 1.  Mardia, K. V. (1976). Linear-Circular Correlation Coefficients and Rhythmometry. *Biometrika,* 63(2), 403--405. <https://doi.org/10.2307/2335637>
 
-2.  Posit Team (2023). RStudio: Integrated Development for R. *Posit Software, PBC, Boston, MA. *<http://www.rstudio.com/>.
+2.  Posit Team (2023). RStudio: Integrated Development for R. *Posit Software, PBC, Boston, MA.* <http://www.rstudio.com/>.
 
 3.  R Core Team (2022). R: A language and environment for statistical computing. *R Foundation for Statistical Computing, Vienna, Austria.* <https://www.R-project.org/>.
