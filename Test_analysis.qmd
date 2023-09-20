@@ -1,0 +1,274 @@
+---
+title: "Test Analysis"
+format: pdf
+editor: visual
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(mosaic)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(tidyr)
+library(Stat2Data)
+library(dplyr)
+library(meta)
+library(metafor)
+library(dmetar)
+library(metaDigitise)
+library(ICC)
+library(wildmeta)
+library(future)
+library(brms)
+library(tidybayes)
+library(ggplot2)
+library(ggridges)
+library(glue)
+library(stringr)
+library(forcats)
+library(brmstools)
+options(digits = 4)
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
+                      tidy=FALSE, size="small")
+```
+
+```{r}
+test_data <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Data/test_data.csv", show_col_types = FALSE)
+```
+
+```{r}
+eszcor <- escalc(measure="ZCOR", ri=es, ni=n, data=test_data)
+test_data$eszcor <- eszcor$yi
+test_data$vi <- eszcor$vi
+test_data$se <- sqrt(eszcor$vi)
+priors <- c(prior(normal(0,1), class = b, coef = Intercept),
+prior(cauchy(0,0.5), class = sd))
+```
+
+```{r}
+seed <- 2023
+iter <- 5000
+chains <- 4
+
+priors <- c(prior(normal(0,1), class = b, coef = Intercept),
+prior(cauchy(0,0.5), class = sd))
+
+meta_prob <- 
+  brm(
+    eszcor|se(se) ~ 0 + Intercept + (1|esid),
+    data = test_data,
+    family = gaussian(),
+    prior = priors,
+    sample_prior = T,
+    iter = iter, 
+    save_pars = save_pars(all = TRUE), 
+    control = list(adapt_delta = 0.99, max_treedepth = 15),
+    seed = seed,
+    chains = chains
+    )
+
+pp_check(meta_prob, ndraws = 100)
+summary(meta_prob)
+```
+
+```{r}
+get_variables(meta_prob)
+fixef(meta_prob)
+```
+
+```{r, fig.height=12}
+analysis <- metafor::rma.mv(yi = eszcor, V = vi, data = test_data, random = ~ 1 | esid/studyid, method = "REML")
+summary(analysis)
+
+metafor::forest(analysis)
+```
+
+```{r}
+meta_prob2 <- 
+  brm(
+    eszcor|se(se) ~ 0 + Intercept + (1|studyid/esid),
+    data = test_data,
+    family = gaussian(),
+    prior = priors,
+    sample_prior = T,
+    iter = iter, 
+    save_pars = save_pars(all = TRUE), 
+    control = list(adapt_delta = 0.99, max_treedepth = 15),
+    seed = seed,
+    chains = chains
+    )
+
+pp_check(meta_prob2, ndraws = 100)
+summary(meta_prob2)
+```
+
+```{r}
+study.draws <- spread_draws(meta_prob, r_esid[id, ], b_Intercept) %>% 
+  mutate(b_Intercept = r_esid + b_Intercept)
+pooled.effect.draws <- spread_draws(meta_prob, b_Intercept) %>% 
+  mutate(Author = "Pooled Effect")
+forest.data <- bind_rows(study.draws, 
+                         pooled.effect.draws) %>% 
+   ungroup() %>%
+   mutate(id = str_replace_all(id, "[.]", " ")) %>% 
+   mutate(id = reorder(id, b_Intercept))
+
+meta_prob %>%
+ spread_draws(b_Intercept, r_esid[id,]) %>%
+  # add the grand mean to the group-specific deviations
+  mutate(b_Intercept = b_Intercept + r_esid) %>%
+  ungroup() %>%
+  mutate(id = str_replace_all(id, "[.]", " ")) %>% 
+
+ggplot(aes(x = b_Intercept, y = reorder(id, b_Intercept))) +
+  geom_vline(xintercept = fixef(meta_prob)[1, 1], color = "white", size = 1) +
+  geom_vline(xintercept = fixef(meta_prob)[1, 3:4], color = "white", linetype = 2) +
+  stat_halfeye(.width = .95, size = 2/3) +
+  labs(x = expression(italic("Fisher's z")),
+       y = NULL) +
+  theme(panel.grid   = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y  = element_text(hjust = 0))
+```
+
+```{r}
+get_variables(meta_prob2)
+fixef(meta_prob2)
+```
+
+```{r, fig.height=10}
+#extract data from the intercepts-only model:
+study.draws <- spread_rvars(meta_prob2, `r_studyid`[`esid`, ], b_Intercept) %>%
+  mutate(b_Intercept = `r_studyid` + b_Intercept) %>%
+  mutate(esid = 1:9) %>%
+  mutate(esid = as.factor(esid)) %>%
+  select(esid, b_Intercept)
+
+pooled.effect.draws <- spread_rvars(meta_prob2, b_Intercept) %>%
+  mutate(esid = "Pooled Effect") %>%
+  mutate(esid = as.factor(esid)) %>%
+  select(esid, b_Intercept)
+
+forest.data <- rbind(study.draws, pooled.effect.draws) %>%
+  ungroup() %>%
+  mutate(esid = reorder(esid, b_Intercept))
+
+forest.data.summary <- group_by(forest.data, esid) %>%
+  mean_qi(b_Intercept)
+
+#plot the results:
+forest_plot_F0 <- ggplot(aes(dist = b_Intercept, y = relevel(esid, "Pooled Effect", after = Inf)), 
+                         data = forest.data) +
+  stat_dist_halfeye(fill = "steelblue", scale = 0.7, alpha = 0.8, size = 0.8, show_point = T) +
+  geom_vline(xintercept = 0.0, color = "black", size = 0.3, linetype="dotted") +
+  geom_text(data = mutate_if(forest.data.summary, is.numeric, round, 2), aes(label = glue("{b_Intercept} [{.lower}, {.upper}]"), x = Inf), hjust = "inward", size = 3) +
+  labs(x = "placeholder", y = element_blank()) +
+  scale_x_continuous("Effect Size (Fisher's z)", limits = c(-1, 1), breaks = c(-0.5, 0, 0.5)) +
+  ggtitle(expression(paste("Forest Plot for Studies on ", italic(f)[o]))) +
+  theme_bw()
+forest_plot_F0 <- forest_plot_F0 + theme(plot.title = element_text(hjust = 0.5, size=15))
+forest_plot_F0
+```
+
+```{r}
+meta_prob3 <- 
+  brm(
+    eszcor|se(se) ~ 0 + Intercept + (1|studyid/esid),
+    data = test_data,
+    family = gaussian(),
+    sample_prior = T,
+    iter = iter,
+    prior = priors,
+    save_pars = save_pars(all = TRUE), 
+    control = list(adapt_delta = 0.99, max_treedepth = 15),
+    seed = seed,
+    chains = chains
+    )
+
+pp_check(meta_prob3, ndraws = 100)
+summary(meta_prob3)
+```
+
+```{r, fig.height=10}
+#extract data from the intercepts-only model:
+
+study.draws1 <- spread_rvars(meta_prob3, `r_studyid`[`esid1`, ], `r_studyid:esid`[`esid2`, ], b_Intercept) 
+
+study.draws2 <- study.draws1 %>%
+  mutate(esid3 = as.integer(sub("_.*", "", esid2))) %>%
+  filter(esid3 == esid1)
+
+study.draws <- study.draws2 %>%
+  mutate(b_Intercept = `r_studyid` + `r_studyid:esid` + b_Intercept) %>%
+  mutate(esid = 1:42) %>%
+  mutate(esid = as.factor(esid)) %>%
+  select(esid, b_Intercept)
+
+pooled.effect.draws <- spread_rvars(meta_prob3, b_Intercept) %>%
+  mutate(esid = "Pooled Effect") %>%
+  mutate(esid = as.factor(esid)) %>%
+  select(esid, b_Intercept)
+
+forest.data <- rbind(study.draws, pooled.effect.draws) %>%
+  ungroup() %>%
+  mutate(esid = reorder(esid, b_Intercept))
+
+forest.data.summary <- group_by(forest.data, esid) %>%
+  mean_qi(b_Intercept)
+
+#plot the results:
+forest_plot_F0 <- ggplot(aes(dist = b_Intercept, y = relevel(esid, "Pooled Effect", after = Inf)), 
+                         data = forest.data) +
+  stat_dist_halfeye(fill = "steelblue", scale = 0.7, alpha = 0.8, size = 0.8, show_point = T) +
+  geom_vline(xintercept = 0.0, color = "black", size = 0.3, linetype="dotted") +
+  geom_text(data = mutate_if(forest.data.summary, is.numeric, round, 2), aes(label = glue("{b_Intercept} [{.lower}, {.upper}]"), x = Inf), hjust = "inward", size = 3) +
+  labs(x = "placeholder", y = element_blank()) +
+  scale_x_continuous("Effect Size (Fisher's z)", limits = c(-0.5, 0.5), breaks = c(-0.25, 0, 0.25)) +
+  ggtitle(expression(paste("Forest Plot for Coupling Percentage Test Data"))) +
+  theme_bw()
+forest_plot_F0 <- forest_plot_F0 + theme(plot.title = element_text(hjust = 0.5, size=15))
+forest_plot_F0
+```
+
+```{r, fig.height=10}
+#extract data from the intercepts-only model:
+
+study.draws1 <- spread_rvars(meta_prob3, `r_studyid`[`esid1`, ], `r_studyid:esid`[`esid2`, ], b_Intercept) 
+
+study.draws2 <- study.draws1 %>%
+  mutate(esid3 = as.integer(sub("_.*", "", esid2))) %>%
+  filter(esid3 == esid1)
+
+study.draws <- study.draws2 %>%
+  mutate(b_Intercept = `r_studyid` + `r_studyid:esid` + b_Intercept) %>%
+  mutate(esid = 1:42) %>%
+  mutate(esid = as.factor(esid)) %>%
+  select(esid, b_Intercept)
+
+pooled.effect.draws <- spread_rvars(meta_prob3, b_Intercept) %>%
+  mutate(esid = "Pooled Effect") %>%
+  mutate(esid = as.factor(esid)) %>%
+  select(esid, b_Intercept)
+
+forest.data <- rbind(study.draws, pooled.effect.draws) %>%
+  ungroup() %>%
+  mutate(esid = reorder(esid, b_Intercept))
+
+forest.data.summary <- group_by(forest.data, esid) %>%
+  mean_qi(b_Intercept)
+
+#plot the results:
+forest_plot_F0 <- ggplot(aes(dist = b_Intercept, y = relevel(esid, "Pooled Effect", after = Inf)), 
+                         data = forest.data) +
+  stat_dist_halfeye(fill = "steelblue", scale = 0.7, alpha = 0.8, size = 0.8, show_point = T) +
+  geom_vline(xintercept = 0.0, color = "black", size = 0.3, linetype="dotted") +
+  geom_text(data = mutate_if(forest.data.summary, is.numeric, round, 2), aes(label = glue("{b_Intercept} [{.lower}, {.upper}]"), x = Inf), hjust = "inward", size = 3) +
+  labs(x = "placeholder", y = element_blank()) +
+  scale_x_continuous("Effect Size (Fisher's z)", limits = c(-1, 1), breaks = c(-0.5, 0, 0.5)) +
+  ggtitle(expression(paste("Forest Plot for Coupling Percentage Test Data"))) +
+  theme_bw()
+forest_plot_F0 <- forest_plot_F0 + theme(plot.title = element_text(hjust = 0.5, size=15))
+forest_plot_F0
+```

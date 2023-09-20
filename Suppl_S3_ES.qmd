@@ -1802,16 +1802,16 @@ mutate(
  Favg_amp = (mean(c(F3, F4, Fz))),
  Cavg_amp = (mean(c(C3, C4, Cz))),
  POavg_amp = (mean(c(P3, P4, Pz, O1, O2))),
- Favg_phase = (mean(c(F3_phase, F4_phase))),
- Cavg_phase = (mean(c(C3_phase, C4_phase))),
- POavg_phase = (mean(c(P3_phase, P4_phase, O1_phase, O2_phase))),
+ Favg_phase = (mean(c(F3_phase, F4_phase)) + 90),
+ Cavg_phase = (mean(c(C3_phase, C4_phase)) + 90),
+ POavg_phase = (mean(c(P3_phase, P4_phase, O1_phase, O2_phase)) + 90),
  Favg_mi = (mean(c(F3_MI, F4_MI))),
  Cavg_mi = (mean(c(C3_MI, C4_MI))),
  POavg_mi = (mean(c(P3_MI, P4_MI, O1_MI, O2_MI))),
  Favg_mvl = (mean(c(F3_MVL, F4_MVL))),
  Cavg_mvl = (mean(c(C3_MVL, C4_MVL))),
  POavg_mvl = (mean(c(P3_MVL, P4_MVL, O1_MVL, O2_MVL))))
-#> view(Zhang2020_avg)
+view(Zhang2020_avg)
 ```
 
 ```{r}
