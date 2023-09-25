@@ -1860,6 +1860,120 @@ rm(list = ls())
 load("preprocessing_fun.RData")
 ```
 
+## Baena2023
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Import source data from Zhang 2020
+Baena2023 <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Zhang2020/Sourcedata/Zhang2020.csv")
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
+```
+
+## Nicolas2022
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Import source data from Zhang 2020
+Nicolas2022_sleep_raw <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Nicolas2022/Spindles2share.csv")
+Nicolas2022_mem_raw <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Nicolas2022/offlingains2share.csv")
+```
+
+```{r}
+Nicolas2022_sleep <- data.frame()
+
+for (row in Nicolas2022_sleep_raw) {
+  row_data <- str_split_fixed(row, ",", 12)
+  Nicolas2022_sleep <- rbind(Nicolas2022_sleep, as.data.frame(row_data))
+}
+colnames <- c('Sub','Channel','Count','Density','Duration','Amplitude','RMS','AbsPower','RelPower','Frequency','Oscillations','Symmetry')
+colnames(Nicolas2022_sleep) <- colnames
+
+Nicolas2022_sleep <- Nicolas2022_sleep[-1, ]
+#> view(Nicolas2022_sleep)
+
+Nicolas2022_sleep_wide <- Nicolas2022_sleep |>
+  pivot_wider(names_from = Channel,
+              values_from = Amplitude,
+              id_cols = Sub)
+#> view(Nicolas2022_sleep_wide)
+Nicolas2022_sleep_wide$C3 <- c(60.87314849, Nicolas2022_sleep_wide$C3[-1])
+view(Nicolas2022_sleep_wide)
+```
+
+```{r}
+Nicolas2022_mem <- data.frame()
+
+for (row in Nicolas2022_mem_raw) {
+  row_data <- str_split_fixed(row, ",", 5)
+  Nicolas2022_mem <- rbind(Nicolas2022_mem, as.data.frame(row_data))
+}
+colnames <- c('Sub', 'Sequence', 'Condition', 'Time', 'Gain_RT')
+colnames(Nicolas2022_mem) <- colnames
+
+Nicolas2022_mem_wide <- Nicolas2022_mem |>
+  pivot_wider(names_from = c("Condition", "Time"),
+              values_from = Gain_RT,
+              id_cols = Sub) |>
+  rename(react_early = ` react_early`,
+         react_late = ` react_late`,
+         notreact_early = ` notReact_early`,
+         notreact_late = ` notReact_late`)
+#> view(Nicolas2022_mem_wide)
+
+Nicolas2022_mem_wide$notreact_late <- as.numeric(Nicolas2022_mem_wide$notreact_late)
+Nicolas2022_mem_wide$notreact_early <- as.numeric(Nicolas2022_mem_wide$notreact_early)
+Nicolas2022_mem_wide <- Nicolas2022_mem_wide |>
+  mutate(notreact_retention = (notreact_late - notreact_early))
+```
+
+```{r}
+Nicolas2022_sleep_wide <- Nicolas2022_sleep_wide |>
+  mutate_all(~ as.numeric(.))
+
+Nicolas2022_sleep_wide <- Nicolas2022_sleep_wide |>
+  rowwise() |>
+mutate(
+ Favg = Fz,
+ Cavg = mean(c(C3, C4, Cz), na.rm = TRUE),
+ POavg = mean(c(Pz, Oz), na.rm = TRUE))
+
+amp <- remove_outliers(Nicolas2022_sleep_wide, scale_columns = c("Favg", "Cavg", "POavg"), memory = Nicolas2022_mem_wide)
+Nicolas2022_sleep_wide <- amp$sleepchar_rem
+Nicolas2022_mem_wide <- amp$memory_rem
+```
+
+```{r}
+# Calculate correlation coefficients between spindle amplitude and memory in each channel location
+cor <- c(
+  "Frontal" = cor(Nicolas2022_sleep_wide$Favg ~ Nicolas2022_mem_wide$notreact_retention, use = "complete"),
+  "Central" = cor(Nicolas2022_sleep_wide$Cavg ~ Nicolas2022_mem_wide$notreact_retention, use = "complete"),
+  "Parietal and Occipital" = cor(Nicolas2022_sleep_wide$POavg ~ Nicolas2022_mem_wide$notreact_retention, use = "complete"))
+
+# Create the table
+cortable("Nicolas 2022", 2, flip = FALSE, "Correlation" = cor)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
+```
+
 # IV. References
 
 1.  Mardia, K. V. (1976). Linear-Circular Correlation Coefficients and Rhythmometry. *Biometrika,* 63(2), 403--405. <https://doi.org/10.2307/2335637>
