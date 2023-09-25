@@ -1442,25 +1442,25 @@ rownames(effect_size) <- c("Fast N2 Frontal", "Fast N2 Central", "Fast N2 Pariet
 #| warning: false
 #| message: false
 #| include: false
-fast2_str_avg <- Solano_strength |>
+fast2_str_avg_raw <- Solano_strength |>
 rowwise() |>
 mutate(
  Favg = (mean(c(Fz2fast))),
  Cavg = (mean(c(C32fast, Cz2fast, C42fast))),
  Pavg = (mean(c(P32fast, Pz2fast, P42fast))))
-fast3_str_avg <- Solano_strength |>
+fast3_str_avg_raw <- Solano_strength |>
 rowwise() |>
 mutate(
  Favg = (mean(c(Fz3fast))),
  Cavg = (mean(c(C33fast, Cz3fast, C43fast))),
  Pavg = (mean(c(P33fast, Pz3fast, P43fast))))
-slow2_str_avg <- Solano_strength |>
+slow2_str_avg_raw <- Solano_strength |>
 rowwise() |>
 mutate(
  Favg = (mean(c(Fz2slow))),
  Cavg = (mean(c(C32slow, Cz2slow, C42slow))),
  Pavg = (mean(c(P32slow, Pz2slow, P42slow))))
-slow3_str_avg <- Solano_strength |>
+slow3_str_avg_raw <- Solano_strength |>
 rowwise() |>
 mutate(
  Favg = (mean(c(Fz3slow))),
@@ -1472,6 +1472,11 @@ mutate(
 #| warning: false
 #| message: false
 #| echo: false
+fast2_str_avg <- remove_outliers(fast2_str_avg_raw, scale_columns =  c("Favg","Cavg","Pavg"))
+fast3_str_avg <- remove_outliers(fast3_str_avg_raw, scale_columns =  c("Favg","Cavg","Pavg"))
+slow2_str_avg <- remove_outliers(slow2_str_avg_raw, scale_columns =  c("Favg","Cavg","Pavg"))
+slow3_str_avg <- remove_outliers(slow3_str_avg_raw, scale_columns =  c("Favg","Cavg","Pavg"))
+
 # Calculate correlation coefficients between coupling strength and memory in each channel location
 cor_fast2 <- c(
   "Frontal" = cor(retention ~ Favg, use = "complete", data = fast2_str_avg),
@@ -1788,6 +1793,7 @@ load("preprocessing_fun.RData")
 #| include: false
 ## Import source data from Zhang 2020
 Zhang2020 <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Zhang2020/Sourcedata/Zhang2020.csv")
+Zhangpct <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Zhang2020/Sourcedata/zhang_percentage.csv")
 ```
 
 ```{r}
@@ -1811,7 +1817,7 @@ mutate(
  Favg_mvl = (mean(c(F3_MVL, F4_MVL))),
  Cavg_mvl = (mean(c(C3_MVL, C4_MVL))),
  POavg_mvl = (mean(c(P3_MVL, P4_MVL, O1_MVL, O2_MVL))))
-view(Zhang2020_avg)
+#> view(Zhang2020_avg)
 ```
 
 ```{r}
@@ -1829,45 +1835,93 @@ knitr::kable(es, format = "markdown", caption = "Zhang 2020 CP Phase and Memory 
 ```
 
 ```{r}
+Zhang2020_avg_mi <- remove_outliers(Zhang2020_avg, scale_columns =  c("Favg_mi","Cavg_mi","POavg_mi"))
+Zhang2020_avg_mvl <- remove_outliers(Zhang2020_avg, scale_columns =  c("Favg_mvl","Cavg_mvl","POavg_mvl"))
+```
+
+```{r}
 #| warning: false
 #| message: false
 #| echo: false
+
 # Calculate correlation coefficients between coupling modulation index and memory in each channel location
 cor_mi <- c(
-  "Frontal" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$Favg_mi, use = "complete"),
-  "Central" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$Cavg_mi, use = "complete"),
-  "Parietal and Occipital" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$POavg_mi, use = "complete"))
+  "Frontal" = cor(Zhang2020_avg_mi$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg_mi$Favg_mi, use = "complete"),
+  "Central" = cor(Zhang2020_avg_mi$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg_mi$Cavg_mi, use = "complete"),
+  "Parietal and Occipital" = cor(Zhang2020_avg_mi$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg_mi$POavg_mi, use = "complete"))
 
 # Create the table
 cortable("Zhang 2020 (MI)", 3, flip = FALSE, "Correlation" = cor_mi)
 
 # Calculate correlation coefficients between coupling mean vector length and memory in each channel location
 cor_mvl <- c(
-  "Frontal" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$Favg_mvl, use = "complete"),
-  "Central" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$Cavg_mvl, use = "complete"),
-  "Parietal and Occipital" = cor(Zhang2020_avg$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg$POavg_mvl, use = "complete"))
+  "Frontal" = cor(Zhang2020_avg_mvl$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg_mvl$Favg_mvl, use = "complete"),
+  "Central" = cor(Zhang2020_avg_mvl$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg_mvl$Cavg_mvl, use = "complete"),
+  "Parietal and Occipital" = cor(Zhang2020_avg_mvl$PBO.OVERNIGHT.RETENTION ~ Zhang2020_avg_mvl$POavg_mvl, use = "complete"))
 
+favstats(Zhang2020_avg_mi$Favg_mi)
+favstats(Zhang2020_avg_mi$Cavg_mi)
+favstats(Zhang2020_avg_mi$POavg_mi)
 # Create the table
 cortable("Zhang 2020 (MVL)", 3, flip = FALSE, "Correlation" = cor_mvl)
 ```
 
 ```{r}
-#| warning: false
-#| message: false
-#| include: false
-## Remove all unused variables
-rm(list = ls())
-load("preprocessing_fun.RData")
-```
+Zhangpct_avg <- Zhangpct |>
+  rowwise() |>
+  mutate(
+    Favg_pct = {
+      ratios <- c(F3_sosp/F3_sp, Fz_sosp/Fz_sp, F4_sosp/F4_sp)
+      ratios[is.infinite(ratios)] <- 10
+      mean(ratios, na.rm = TRUE)
+    },
+    Cavg_pct = {
+      ratios <- c(C3_sosp/C3_sp, Cz_sosp/Cz_sp, C4_sosp/C4_sp)
+      ratios[is.infinite(ratios)] <- 10
+      mean(ratios, na.rm = TRUE)
+    },
+    POavg_pct = {
+      ratios <- c(P3_sosp/P3_sp, Pz_sosp/Pz_sp, P4_sosp/P4_sp, O1_sosp/O1_sp, O2_sosp/O2_sp)
+      ratios[is.infinite(ratios)] <- 10
+      mean(ratios, na.rm = TRUE)
+    }
+  )
+#> view(Zhangpct_avg)
+is_odd <- seq_len(nrow(Zhangpct_avg)) %% 2 == 1
+is_even <- seq_len(nrow(Zhangpct_avg)) %% 2 == 0
 
-## Baena2023
+zhangpct_avg_nrem2_raw <- Zhangpct_avg[is_odd, ]
+zhangpct_avg_sws_raw <- Zhangpct_avg[is_even, ]
+```
 
 ```{r}
 #| warning: false
 #| message: false
-#| include: false
-## Import source data from Zhang 2020
-Baena2023 <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Zhang2020/Sourcedata/Zhang2020.csv")
+#| echo: false
+zhangpct_avg_nrem2 <- remove_outliers(zhangpct_avg_nrem2_raw, scale_columns =  c("Favg_pct","Cavg_pct","POavg_pct"))
+
+rows2del_nrem2 <- c(10, 22, 25)
+Zhang2020_avg_nrem2 <- Zhang2020_avg[-rows2del_nrem2, ]
+
+# Calculate correlation coefficients between coupling percentage in nREM2 stage and memory in each channel location
+cor_nrem2 <- c(
+  "Frontal" = cor(Zhang2020_avg_nrem2$PBO.OVERNIGHT.RETENTION ~ zhangpct_avg_nrem2$Favg_pct, use = "complete"),
+  "Central" = cor(Zhang2020_avg_nrem2$PBO.OVERNIGHT.RETENTION ~ zhangpct_avg_nrem2$Cavg_pct, use = "complete"),
+  "Parietal and Occipital" = cor(Zhang2020_avg_nrem2$PBO.OVERNIGHT.RETENTION ~ zhangpct_avg_nrem2$POavg_pct, use = "complete"))
+
+zhangpct_avg_sws <- remove_outliers(zhangpct_avg_sws_raw, scale_columns =  c("Favg_pct","Cavg_pct","POavg_pct"))
+
+rows2del_sws <- c(16, 22, 23)
+Zhang2020_avg_sws <- Zhang2020_avg[-rows2del_sws, ]
+
+# Calculate correlation coefficients between coupling percentage in nREM2 stage and memory in each channel location
+cor_sws <- c(
+  "Frontal" = cor(Zhang2020_avg_sws$PBO.OVERNIGHT.RETENTION ~ zhangpct_avg_sws$Favg_pct, use = "complete"),
+  "Central" = cor(Zhang2020_avg_sws$PBO.OVERNIGHT.RETENTION ~ zhangpct_avg_sws$Cavg_pct, use = "complete"),
+  "Parietal and Occipital" = cor(Zhang2020_avg_sws$PBO.OVERNIGHT.RETENTION ~ zhangpct_avg_sws$POavg_pct, use = "complete"))
+
+# Create the table
+cortable("Zhang 2020", 4, flip = FALSE, "nREM2" = cor_nrem2, "sws" = cor_sws)
 ```
 
 ```{r}
@@ -1907,9 +1961,8 @@ Nicolas2022_sleep_wide <- Nicolas2022_sleep |>
   pivot_wider(names_from = Channel,
               values_from = Amplitude,
               id_cols = Sub)
-#> view(Nicolas2022_sleep_wide)
 Nicolas2022_sleep_wide$C3 <- c(60.87314849, Nicolas2022_sleep_wide$C3[-1])
-view(Nicolas2022_sleep_wide)
+#> view(Nicolas2022_sleep_wide)
 ```
 
 ```{r}

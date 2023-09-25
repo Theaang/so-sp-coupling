@@ -1,0 +1,35 @@
+---
+title: "Coupling Strength Main Analysis"
+format: pdf
+editor: visual
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(mosaic)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(tidyr)
+library(Stat2Data)
+library(dplyr)
+library(meta)
+library(metafor)
+library(dmetar)
+library(metaDigitise)
+library(ICC)
+library(wildmeta)
+library(future)
+library(brms)
+library(tidybayes)
+library(ggplot2)
+library(ggridges)
+library(glue)
+library(stringr)
+library(forcats)
+library(brmstools)
+options(digits = 4)
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
+                      tidy=FALSE, size="small")
+```
