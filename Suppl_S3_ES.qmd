@@ -25,6 +25,7 @@ library(dplyr)
 library(metaDigitise)
 library(shinyDigitise)
 library(Directional)
+library(circular)
 options(digits = 4)
 knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
                       tidy=FALSE, size="small")
@@ -600,13 +601,13 @@ cortable("Hahn 2020", 3, flip = FALSE, Child = cor_ch, Adolescent = cor_ad)
 #| include: false
 ## Coupling Percentage Preprocessing
 ## Detect and Remove outlier(s)
-chpct <- remove_outliers(Hahn_pct, scale_columns = c("ch_n2", "ch_n3"), memory = Hahn_beh)
-Hahn_chpct_rem <- chpct$sleepchar_rem
-Hahn_chbeh_rem <- chpct$memory_rem
+#> chpct <- remove_outliers(Hahn_pct, scale_columns = c("ch_n2", "ch_n3"), memory = Hahn_beh)
+#> Hahn_chpct_rem <- chpct$sleepchar_rem
+#> Hahn_chbeh_rem <- chpct$memory_rem
 
-adpct <- remove_outliers(Hahn_pct, scale_columns = c("ad_n2", "ad_n3"), memory = Hahn_beh)
-Hahn_adpct_rem <- adpct$sleepchar_rem
-Hahn_adbeh_rem <- adpct$memory_rem
+#> adpct <- remove_outliers(Hahn_pct, scale_columns = c("ad_n2", "ad_n3"), memory = Hahn_beh)
+#> Hahn_adpct_rem <- adpct$sleepchar_rem
+#> Hahn_adbeh_rem <- adpct$memory_rem
 ```
 
 ```{r}
@@ -614,19 +615,19 @@ Hahn_adbeh_rem <- adpct$memory_rem
 #| message: false
 #| echo: false
 # Calculate correlation coefficients for the child group in each sleep stage
-cor_ch <- c(
-  N2 = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_chpct_rem$ch_n2, use = "complete"),
-  N3 = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_chpct_rem$ch_n3, use = "complete")
-)
+#> cor_ch <- c(
+#>   N2 = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_chpct_rem$ch_n2, use = "complete"),
+#>   N3 = cor(Hahn_chbeh_rem$ch_diffs ~ Hahn_chpct_rem$ch_n3, use = "complete")
+#> )
 
 # Calculate correlation coefficients for the adolescent group in each sleep stage
-cor_ad <- c(
-  N2 = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adpct_rem$ad_n2, use = "complete"),
-  N3 = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adpct_rem$ad_n3, use = "complete")
-)
+#> cor_ad <- c(
+#>   N2 = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adpct_rem$ad_n2, use = "complete"),
+#>   N3 = cor(Hahn_adbeh_rem$ad_diffs ~ Hahn_adpct_rem$ad_n3, use = "complete")
+#> )
 
 # Create the table
-cortable("Hahn 2020", 4, Child = cor_ch, Adolescent = cor_ad)
+#> cortable("Hahn 2020", 4, Child = cor_ch, Adolescent = cor_ad)
 ```
 
 ```{r}
@@ -747,7 +748,7 @@ load("preprocessing_fun.RData")
 #| message: false
 #| include: false
 ## Import source data from Donnelly 2022
-eeg_download <- "https://github.com/Theaang/so-sp-coupling/raw/main/Paper/Donnelly2022/Sourcedata/sleep_study_eeg_summary_data_z.rds"
+eeg_download <- "https://github.com/Theaang/so-sp-coupling/raw/main/Paper/Donnelly2022/Sourcedata/sleep_study_eeg_summary_data.rds"
 Donnelly_eeg <- readRDS(url(eeg_download, method="libcurl"))
 beh_download <- "https://github.com/Theaang/so-sp-coupling/raw/main/Paper/Donnelly2022/Sourcedata/sleep_study_beh_psych_demographic_data.rds"
 Donnelly_behrow <- readRDS(url(beh_download, method="libcurl"))
@@ -774,7 +775,7 @@ Donnellyphase_raw <- Donnelly2022[[21]]
 # Exclude participants from the patient group and missing values
 Donnelly_beh <- Donnelly_behrow |>
   filter(group == "Sib") |>
-  mutate(retention = accC_morning/accC_evening) |>
+  mutate(retention = (accC_morning-accC_evening)/accC_evening) |>
   filter(rowSums(is.na(cur_data()[, 26:27])) == 0)
 #> view(Donnelly_beh)
 ```
@@ -799,9 +800,9 @@ Donnellyphase <- Donnellyphase |>
 Donnellyphase_avg <- Donnellyphase |>
   rowwise() |>
   mutate(
-    Favg = (mean(c(F3, F4, Fz)) * pi) / 180,
-    Cavg = (mean(c(C3, C4, Cz)) * pi) / 180,
-    POavg = (mean(c(P3, P4, Pz, O1, O2)) * pi) / 180)
+    Favg = (mean(c(F3, F4, Fz)) * pi) / 180 + 0.5*pi,
+    Cavg = (mean(c(C3, C4, Cz)) * pi) / 180 + 0.5*pi,
+    POavg = (mean(c(P3, P4, Pz, O1, O2)) * pi) / 180 + 0.5*pi)
 Donnellyphase_avg <- Donnellyphase_avg[-7,]
 ```
 
