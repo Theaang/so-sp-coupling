@@ -1,12 +1,21 @@
 ---
 title: "Coupling Phase Main Analysis"
+subtitle: "Does sleep spindle-slow oscillation coupling contribute to memory consolidation during sleep? A meta-analysis and systematic review"
 format: pdf
 editor: visual
+author: "University of Massachusetts Amherst SomNeuro Lab"
+date: "2023-10-05"
+date-format: iso
+toc: true
+toc-title: Table of Contents
 ---
+
+# Preprocessing
 
 ```{r}
 #| label: setup
 #| include: false
+## Load required packages for analysis
 library(mosaic)
 library(tidyverse)
 library(knitr)
@@ -29,7 +38,20 @@ library(glue)
 library(stringr)
 library(forcats)
 library(brmstools)
-options(digits = 4)
+
+## Optimize multi-core utilization for increasing iteration speed
+options(mc.cores = parallel::detectCores())
+
+## Set default formats
 knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
-                      tidy=FALSE, size="small")
+                      tidy = FALSE, size = "small",
+                      echo = FALSE, fig.width = 12,
+                      fig.height = 10, cache = TRUE,
+                      tidy.opts = list(blank = FALSE, width.cutoff = 60))
+```
+
+```{r}
+## Import datasets
+main <- read_csv("")
+phase <- read_csv("")
 ```

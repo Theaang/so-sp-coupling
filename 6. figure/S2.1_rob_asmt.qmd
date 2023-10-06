@@ -1,0 +1,15 @@
+---
+title: "Figure S2.1: Risk of Bias Assessment"
+format: pdf
+editor: visual
+---
+
+```{r}
+library(robvis)
+```
+
+```{r}
+data_rob2 <- read.csv("~/Desktop/ROB2_example.csv")
+rob_summary(data_rob2, tool = "ROB2", overall = "TRUE", weighted = "FALSE")
+rob_traffic_light(data_rob2, tool = "ROB2", psize = 10)
+```
