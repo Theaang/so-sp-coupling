@@ -76,7 +76,7 @@ studyid,esid,n,age_grp,channel_loc,channel_cl,sleep_con,sleep_stg,task_type,mem_
 18,75,10,YA,Fz,frontal,overnight,sws,VMA,motor,diff,div,slow,1.328,rad,0,circlin,0.1768,
 18,76,10,YA,"C3, Cz, C4",central,overnight,sws,VMA,motor,diff,div,slow,0.6856,rad,0,circlin,0.4515,
 18,77,10,YA,"P3, Pz, P4",parietal_occipital,overnight,sws,VMA,motor,diff,div,slow,0.2686,rad,0,circlin,0.231,
-19,78,25,OA,Fz,frontal,overnight,mixed,WP,declarative,diff,sub,slow,1.491209,rad,0,circlin,0.201?,
-19,79,25,OA,Cz,central,overnight,mixed,WP,declarative,diff,sub,fast,0.2601,rad,0,circlin,0.115?,
+19,78,25,OA,Fz,frontal,overnight,mixed,WP,declarative,diff,sub,slow,1.491209,rad,0,circlin,0.201,
+19,79,25,OA,Cz,central,overnight,mixed,WP,declarative,diff,sub,fast,0.2601,rad,0,circlin,0.115,
 20,80,28,YA,"C3, C4",central,overnight,mixed,WP,declarative,diff,div,mixed,0.06255,rad,1,circlin,0.181,Effect of dextroamphetamine unknown
 20,81,28,YA,"P3, P4, O1, O2",parietal_occipital,overnight,mixed,WP,declarative,diff,div,mixed,0.05094,rad,1,circlin,0.167,Effect of dextroamphetamine unknown
