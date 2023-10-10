@@ -1,0 +1,33 @@
+---
+title: "Inter-Rater Reliability Test"
+format: pdf
+editor: visual
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(tidyr)
+library(Stat2Data)
+library(dplyr)
+library(irr)
+options(digits = 4)
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
+                      tidy=FALSE, size="small")
+```
+
+```{r}
+#| warning: false
+#| message: false
+IRR <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Eval/IRR/IRR.csv")
+IRR <- IRR |>
+pivot_wider(names_from = 1:12,
+            values_from = c(sample_size, mean_age, sleep_stage, condition, psg_channel, spindle_type, memory_task, phase, ampltude, strength, percentage), id_cols = study)
+```
+
+```{r}
+cohen.kappa(IRR_1)
+```
