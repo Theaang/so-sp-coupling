@@ -2,8 +2,8 @@
 title: "Supplemental Material 3: Preprocessed Effect Sizes from Invididual Source Data"
 format: pdf
 editor: visual
-author: "Author"
-date: "2023-08-10"
+author: "University of Massachusetts Amherst SomNeuro Lab"
+date: "2023-10-05"
 date-format: iso
 toc: true
 toc-title: Table of Contents
@@ -1373,6 +1373,7 @@ load("preprocessing_fun.RData")
 #| include: false
 ## Import source data from Solano2022
 Solano_phase <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Solano2022/Sourcedata/solano_phase.csv")
+Solano_amplitude <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Solano2022/Sourcedata/solano_amplitude.csv")
 Solano_strength <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Solano2022/Sourcedata/solano_strength.csv")
 Solano_percentage <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Solano2022/Sourcedata/solano_percentage.csv")
 ```
@@ -1437,6 +1438,53 @@ es_slow3 <- rbind(es_slow3, ev_slow3)
 effect_size <- rbind(es_fast2, es_fast3, es_slow2, es_slow3)
 rownames(effect_size) <- c("Fast N2 Frontal", "Fast N2 Central", "Fast N2 Parietal","Fast N3 Frontal", "Fast N3 Central", "Fast N3 Parietal", "Slow N2 Frontal", "Slow N2 Central", "Slow N2 Parietal", "Slow N3 Frontal", "Slow N3 Central", "Slow N3 Parietal")
   knitr::kable(effect_size, format = "markdown", caption = "Solano 2022 CP Phase and Memory Circular Linear Correlation Table")
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+n2_amp_avg_raw <- Solano_amplitude |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz_n2))),
+ Cavg = (mean(c(Cz_n2, C3_n2, C4_n2))),
+ Pavg = (mean(c(Pz_n2, P3_n2, P4_n2))))
+n3_amp_avg_raw <- Solano_amplitude |>
+rowwise() |>
+mutate(
+ Favg = (mean(c(Fz_n3))),
+ Cavg = (mean(c(Cz_n3, C3_n3, C4_n3))),
+ Pavg = (mean(c(Pz_n3, P3_n3, P4_n3))))
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+n2_amp_avg <- remove_outliers(n2_amp_avg_raw, scale_columns =  c("Favg","Cavg","Pavg"))
+n3_amp_avg <- remove_outliers(n3_amp_avg_raw, scale_columns =  c("Favg","Cavg","Pavg"))
+
+# Calculate correlation coefficients between coupling strength and memory in each channel location
+cor_n2 <- c(
+  "Frontal" = cor(retention ~ Favg, use = "complete", data = n2_amp_avg),
+  "Central" = cor(retention ~ Cavg, use = "complete", data = n2_amp_avg),
+  "Parietal" = cor(retention ~ Pavg, use = "complete", data = n2_amp_avg))
+
+cor_n3 <- c(
+  "Frontal" = cor(retention ~ Favg, use = "complete", data = n3_amp_avg),
+  "Central" = cor(retention ~ Cavg, use = "complete", data = n3_amp_avg),
+  "Parietal" = cor(retention ~ Pavg, use = "complete", data = n3_amp_avg))
+
+# Create the table
+cortable("Solano 2022", 2, flip = FALSE, "N2" = cor_n2, "N3" = cor_n3)
+
+favstats(n2_amp_avg$Favg)
+favstats(n2_amp_avg$Cavg)
+favstats(n2_amp_avg$Pavg)
+favstats(n3_amp_avg$Favg)
+favstats(n3_amp_avg$Cavg)
+favstats(n3_amp_avg$Pavg)
 ```
 
 ```{r}
@@ -1943,6 +1991,7 @@ load("preprocessing_fun.RData")
 ## Import source data from Zhang 2020
 Nicolas2022_sleep_raw <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Nicolas2022/Spindles2share.csv")
 Nicolas2022_mem_raw <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Nicolas2022/offlingains2share.csv")
+Nicolas2022_cp_raw <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Nicolas2022/mvl_pp_epoch30_2share.csv")
 ```
 
 ```{r}
@@ -1963,6 +2012,8 @@ Nicolas2022_sleep_wide <- Nicolas2022_sleep |>
               values_from = Amplitude,
               id_cols = Sub)
 Nicolas2022_sleep_wide$C3 <- c(60.87314849, Nicolas2022_sleep_wide$C3[-1])
+Nicolas2022_sleep_wide <- Nicolas2022_sleep_wide |>
+  mutate_all(~ as.numeric(.))
 #> view(Nicolas2022_sleep_wide)
 ```
 
@@ -1993,9 +2044,27 @@ Nicolas2022_mem_wide <- Nicolas2022_mem_wide |>
 ```
 
 ```{r}
-Nicolas2022_sleep_wide <- Nicolas2022_sleep_wide |>
-  mutate_all(~ as.numeric(.))
+Nicolas2022_cp <- data.frame()
 
+for (row in Nicolas2022_cp_raw) {
+  row_data <- str_split_fixed(row, ";", 4)
+  Nicolas2022_cp <- rbind(Nicolas2022_cp, as.data.frame(row_data))
+}
+colnames <- c('mean_vector_length', 'preferred_phase', 'subject', 'channel')
+colnames(Nicolas2022_cp) <- colnames
+
+Nicolas2022_cp_wide <- Nicolas2022_cp |>
+  pivot_wider(names_from = channel,
+              values_from = c('mean_vector_length', 'preferred_phase'),
+              id_cols = subject)
+#> view(Nicolas2022_cp_wide)
+
+Nicolas2022_cp_wide <- Nicolas2022_cp_wide |>
+  mutate(across(-subject, as.numeric))
+#> view(Nicolas2022_cp_wide)
+```
+
+```{r}
 Nicolas2022_sleep_wide <- Nicolas2022_sleep_wide |>
   rowwise() |>
 mutate(
@@ -2026,6 +2095,26 @@ cortable("Nicolas 2022", 2, flip = FALSE, "Correlation" = cor)
 ## Remove all unused variables
 rm(list = ls())
 load("preprocessing_fun.RData")
+```
+
+## Niknazar2015
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Import source data from Zhang 2020
+Niknazar2015_phase <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Niknazar2015/Sourcedata/niknazar_phase.csv")
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+## Calculate the circular linear correlation
+niknazar_phase <- circular_cor(Niknazar2015_phase$phase, Niknazar2015_phase$improvement)
+rownames(niknazar_phase) <- 'Correlation'
+knitr::kable(niknazar_phase,format ="markdown",caption ="Niknazar 2015 CP Phase and Memory Circlin R Correlation Table")
 ```
 
 # IV. References
