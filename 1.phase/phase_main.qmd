@@ -1,6 +1,6 @@
 ---
 title: "Coupling Phase Main Analysis"
-subtitle: "Does sleep spindle-slow oscillation coupling contribute to memory consolidation during sleep? A meta-analysis and systematic review"
+subtitle: "Does sleep spindle-slow oscillation coupling contribute to memory consolidation during sleep? A meta-analysis and methodological review"
 format: pdf
 editor: visual
 author: "University of Massachusetts Amherst SomNeuro Lab"

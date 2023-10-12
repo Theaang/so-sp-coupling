@@ -1,0 +1,64 @@
+studyid,esid,n,age_grp,channel_loc,channel_cl,sleep_con,sleep_stg,task_type,mem_type,mem_det,mem_form,sp_type,measure,mean_sp_amp,mean_sp_amp_unit,covariate,es_type,es,notes
+1,1,15,YA,Fz,frontal,nap,mixed,Spatial,declarative,diff,sub,fast,amp,NaN,NaN,1,pearson,0.2393,"Allocentric, Water Maze Task"
+1,2,15,YA,Cz,central,nap,mixed,Spatial,declarative,diff,sub,slow,amp,NaN,NaN,1,pearson,-0.196,"Allocentric, Water Maze Task"
+1,3,15,YA,Fz,frontal,nap,mixed,Spatial,declarative,diff,sub,fast,amp,NaN,NaN,1,pearson,0.324,"Egocentric, Water Maze Task"
+1,4,15,YA,Cz,central,nap,mixed,Spatial,declarative,diff,sub,slow,amp,NaN,NaN,1,pearson,0.0319,"Egocentric, Water Maze Task"
+2,5,30,YA,"F3, F4, C3, C4",mixed,overnight,n2,TMR,declarative,post,sub,fast,amp,18.67 ± 3.258,μV,1,pearson,-0.1984,Confounding Variables in Groups
+2,6,30,YA,"F3, F4, C3, C4",mixed,overnight,sws,TMR,declarative,post,sub,fast,amp,17.22 ± 3.223,μV,1,pearson,-0.28023,Confounding Variables in Groups
+3,7,34,YA,"F3, Fz, F4",frontal,nap,mixed,WP,declarative,diff,div,fast,amp,35.22 ± 7.998,μV,0,pearson,-0.0145,
+3,8,34,YA,"C3, Cz, C4",central,nap,mixed,WP,declarative,diff,div,fast,amp,33.9 ± 8.563,μV,0,pearson,-0.0711,
+3,9,34,YA,"P3, Pz, P4, O1, O2",parietal_occipital,nap,mixed,WP,declarative,diff,div,fast,amp,28.64 ± 8.498,μV,0,pearson,-0.1847,
+3,10,28,YA,"F3, Fz, F4",frontal,nap,mixed,WP,declarative,diff,div,slow,amp,41.45 ± 9.43,μV,0,pearson,-0.0222,
+3,11,28,YA,"C3, Cz, C4",central,nap,mixed,WP,declarative,diff,div,slow,amp,37.18 ± 9.76,μV,0,pearson,-0.0896,
+3,12,28,YA,"P3, Pz, P4, O1, O2",parietal_occipital,nap,mixed,WP,declarative,diff,div,slow,amp,32.03 ± 10.4,μV,0,pearson,-0.277,
+4,13,15,AD,"F3, Fz, F4",frontal,overnight,mixed,2DL,declarative,diff,div,mixed,amp,25.77 ± 5.681,μV,0,pearson,0.5232,
+4,14,15,AD,"C3, Cz, C4",central,overnight,mixed,2DL,declarative,diff,div,mixed,amp,21.2 ± 4.372,μV,0,pearson,0.5343,
+4,15,15,AD,"P3, Pz, P4, O1, O2",parietal_occipital,overnight,mixed,2DL,declarative,diff,div,mixed,amp,21.4 ± 4.447,μV,0,pearson,0.3783,
+5,16,33,CH,"F3, Fz, F4",frontal,overnight,sws,WP,declarative,diff,div,mixed,amp,0.4937 ± 0.1489,1/f corrected,1,pearson,-0.1877,Repeated Measurement CH & AD
+5,17,33,CH,"C3, Cz, C4",central,overnight,sws,WP,declarative,diff,div,mixed,amp,0.5117 ± 0.1626,1/f corrected,1,pearson,-0.225,Repeated Measurement CH & AD
+5,18,33,CH,"P3, Pz, P4, O1, O2",parietal_occipital,overnight,sws,WP,declarative,diff,div,mixed,amp,0.4494 ± 0.1224,1/f corrected,1,pearson,-0.2796,Repeated Measurement CH & AD
+5,19,33,AD,"F3, Fz, F4",frontal,overnight,sws,WP,declarative,diff,div,mixed,amp,0.5173 ± 0.1509,1/f corrected,1,pearson,0.2143,Repeated Measurement CH & AD
+5,20,33,AD,"C3, Cz, C4",central,overnight,sws,WP,declarative,diff,div,mixed,amp,0.5693 ± 0.1478,1/f corrected,1,pearson,0.3446,Repeated Measurement CH & AD
+5,21,33,AD,"P3, Pz, P4, O1, O2",parietal_occipital,overnight,sws,WP,declarative,diff,div,mixed,amp,0.5026 ± 0.1202,1/f corrected,1,pearson,0.299,Repeated Measurement CH & AD
+6,22,17,AD,"F3, Fz, F4",frontal,overnight,sws,Juggle,motor,diff,sub,mixed,amp,NaN,1/f corrected,0,spearman,-0.2557,
+6,23,17,AD,"C3, Cz, C4",central,overnight,sws,Juggle,motor,diff,sub,mixed,amp,NaN,1/f corrected,0,spearman,-0.2067,
+6,24,17,AD,"P3, Pz, P4, O1, O2",parietal_occipital,overnight,sws,Juggle,motor,diff,sub,mixed,amp,NaN,1/f corrected,0,spearman,-0.4873,
+6,25,25,YA,"F3, Fz, F4",frontal,overnight,sws,Juggle,motor,diff,sub,mixed,amp,NaN,1/f corrected,0,spearman,-0.2941,
+6,26,25,YA,"C3, Cz, C4",central,overnight,sws,Juggle,motor,diff,sub,mixed,amp,NaN,1/f corrected,0,spearman,-0.0872,
+6,27,25,YA,"P3, Pz, P4, O1, O2",parietal_occipital,overnight,sws,Juggle,motor,diff,sub,mixed,amp,NaN,1/f corrected,0,spearman,-0.3348,
+7,28,151,AD,"F3, F4",frontal,overnight,mixed,IMG,declarative,post,div,fast,amp,NaN,μV,0,pearson,0.0775,
+7,29,150,AD,"C3, C4",central,overnight,mixed,IMG,declarative,post,div,fast,amp,NaN,μV,0,pearson,0.0316,
+7,30,151,AD,"F3, F4",frontal,overnight,mixed,IMG,declarative,post,div,slow,amp,NaN,μV,0,pearson,0.1612,
+7,31,150,AD,"C3, C4",central,overnight,mixed,IMG,declarative,post,div,slow,amp,NaN,μV,0,pearson,0.0316,
+8,32,19,CH,"F3, F4",frontal,overnight,mixed,PIC,declarative,post,div,fast,amp,40.36 ± 8.339,μV,0,pearson,0.2517,
+8,33,19,CH,"C3, Cz, C4",central,overnight,mixed,PIC,declarative,post,div,fast,amp,35.2 ± 5.962,μV,0,pearson,0.3392,
+8,34,19,CH,"P3, P4",parietal_occipital,overnight,mixed,PIC,declarative,post,div,fast,amp,28.86 ± 4.948,μV,0,pearson,0.1728,
+8,35,19,CH,"F3, F4",frontal,overnight,mixed,PIC,declarative,post,div,slow,amp,57.59 ± 11.59,μV,0,pearson,-0.1948,
+8,36,19,CH,"C3, Cz, C4",central,overnight,mixed,PIC,declarative,post,div,slow,amp,41.75 ± 6.518,μV,0,pearson,-0.1647,
+8,37,19,CH,"P3, P4",parietal_occipital,overnight,mixed,PIC,declarative,post,div,slow,amp,35.3 ± 5.444,μV,0,pearson,-0.2322,
+9,38,30,CH*,"F3, F4",frontal,overnight,mixed,DRM,declarative,post,sub,fast,amp,38.82 ± 10.18,μV,0,pearson,0.4792,"List words, Early AD"
+9,39,30,CH*,"C3, C4",central,overnight,mixed,DRM,declarative,post,sub,fast,amp,33.01 ± 7.86,μV,0,pearson,0.5582,"List words, Early AD"
+9,40,30,CH*,"P3, P4",parietal_occipital,overnight,mixed,DRM,declarative,post,sub,fast,amp,29.06 ± 6.94,μV,0,pearson,0.5941,"List words, Early AD"
+9,41,30,CH*,"F3, F4",frontal,overnight,mixed,DRM,declarative,post,sub,slow,amp,54.48 ± 16.84,μV,0,pearson,0.1308,"List words, Early AD"
+9,42,30,CH*,"C3, C4",central,overnight,mixed,DRM,declarative,post,sub,slow,amp,38.52 ± 8.561,μV,0,pearson,0.1738,"List words, Early AD"
+9,43,30,CH*,"P3, P4",parietal_occipital,overnight,mixed,DRM,declarative,post,sub,slow,amp,33.99 ± 7.895,μV,0,pearson,0.083,"List words, Early AD"
+10,44,20,YA,C3-A2,central,overnight,n2,Word_list,declarative,diff,div,fast,pwr,1.8 ± 0.4,log_μV^2,0,pearson,0.47,"Extracted from Holz, 2012 (Same Dataset)"
+10,45,20,YA,C3-A2,central,overnight,mixed,Word_list,declarative,diff,div,fast,pwr,1.7 ± 0.4,log_μV^2,0,pearson,0.448,"Extracted from Holz, 2012 (Same Dataset)"
+10,46,20,YA,C3-A2,central,overnight,n2,Mirror_tracing,motor,diff,sub,fast,pwr,1.8 ± 0.4,log_μV^2,0,pearson,0.411,"Extracted from Holz, 2012 (Same Dataset)"
+10,47,20,YA,C3-A2,central,overnight,mixed,Mirror_tracing,motor,diff,sub,fast,pwr,1.7 ± 0.4,log_μV^2,0,pearson,0.397,"Extracted from Holz, 2012 (Same Dataset)"
+11,48,28,YA,Cz,central,overnight,n2,MST,motor,diff,sub,fast,amp,11.28 ± 3.591,μV,0,pearson,-0.1982,
+12,49,14,CH*,Cz,mixed,overnight,n2,Spatial,declarative,diff,sub,mixed,amp,43.73 ± 8.674,μV,0,pearson,0.3421,Early AD
+13,50,24,YA,Fz,frontal,nap,mixed,MST,motor,diff,sub,fast,amp,72.49 ± 15.84,μV,1,pearson,0.0938,Voice Stimulation (Non-react condition)
+13,51,24,YA,"C3, Cz, C4",central,nap,mixed,MST,motor,diff,sub,fast,amp,61.81 ± 12.01,μV,1,pearson,-0.0532,Voice Stimulation (Non-react condition)
+13,52,24,YA,"Pz, Oz",parietal_occipital,nap,mixed,MST,motor,diff,sub,fast,amp,54.39 ± 12.62,μV,1,pearson,-0.2523,Voice Stimulation (Non-react condition)
+14,53,28,YA,C3,central,nap,n2,WP,declarative,diff,sub,fast,pwr,Unknown,Unknown,0,pearson,0.184,
+15,54,20,YA,Cz,central,nap,"n2, sws",WIP,declarative,diff,div,fast,amp,36.32 ± 9.3,μV,0,pearson,0.1685,
+15,55,20,YA,Cz,central,nap,"n2, sws",TMR,declarative,diff,div,fast,amp,36.32 ± 9.3,μV,0,pearson,-0.2115,
+16,56,10,YA,Fz,frontal,overnight,n2,VMA,motor,diff,div,mixed,amp,72.57 ± 25.33,μV,0,pearson,-0.0116,
+16,57,10,YA,"C3, Cz, C4",central,overnight,n2,VMA,motor,diff,div,mixed,amp,60.58 ± 13.9,μV,0,pearson,-0.1619,
+16,58,10,YA,"P3, Pz, P4",parietal_occipital,overnight,n2,VMA,motor,diff,div,mixed,amp,51.92 ± 7.837,μV,0,pearson,-0.0681,
+16,59,10,YA,Fz,frontal,overnight,sws,VMA,motor,diff,div,mixed,amp,78.48 ± 30.38,μV,0,pearson,-0.0268,
+16,60,10,YA,"C3, Cz, C4",central,overnight,sws,VMA,motor,diff,div,mixed,amp,60.42 ± 19.21,μV,0,pearson,0.013,
+16,61,10,YA,"P3, Pz, P4",parietal_occipital,overnight,sws,VMA,motor,diff,div,mixed,amp,51.35 ± 10.97,μV,0,pearson,0.0356,
+17,62,25,OA,Fz,frontal,overnight,mixed,WP,declarative,diff,sub,slow,amp,43.12 ± 11.84,μV,0,pearson,0.259,
+17,63,25,OA,Cz,central,overnight,mixed,WP,declarative,diff,sub,fast,amp,36.08 ± 7.32,μV,0,pearson,0.357,

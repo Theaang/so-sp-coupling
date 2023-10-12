@@ -1,5 +1,5 @@
 ---
-title: "Inter-Rater Reliability Test"
+title: "Inter-Rater Reliability Statistics"
 format: pdf
 editor: visual
 ---
@@ -8,11 +8,6 @@ editor: visual
 #| label: setup
 #| include: false
 library(tidyverse)
-library(knitr)
-library(kableExtra)
-library(tidyr)
-library(Stat2Data)
-library(dplyr)
 library(irr)
 options(digits = 4)
 knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
@@ -22,12 +17,16 @@ knitr::opts_chunk$set(fig.pos = "H", out.extra = "",
 ```{r}
 #| warning: false
 #| message: false
-IRR <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Eval/IRR/IRR.csv")
-IRR <- IRR |>
-pivot_wider(names_from = 1:12,
-            values_from = c(sample_size, mean_age, sleep_stage, condition, psg_channel, spindle_type, memory_task, phase, ampltude, strength, percentage), id_cols = study)
+irr_raw <- read_csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Eval/IRR/IRR.csv")
+irr_list <- split(irr_raw, irr_raw$study)
+irr <- do.call(cbind, irr_list)
+cols_to_remove <- grep("^\\d+\\.study", colnames(irr))
+irr <- irr[, -cols_to_remove]
+irr <- t(irr)
+rater <- c("rater1", "rater2")
+colnames(irr) <- rater
 ```
 
 ```{r}
-cohen.kappa(IRR_1)
+agree(irr)
 ```

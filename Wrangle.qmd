@@ -1,7 +1,11 @@
 ---
 title: "Wrangle"
+subtitle: "Does sleep spindle-slow oscillation coupling contribute to memory consolidation during sleep? A meta-analysis and methodological review"
 format: pdf
 editor: visual
+author: "University of Massachusetts Amherst SomNeuro Lab"
+date: "2023-10-05"
+date-format: iso
 ---
 
 ```{r}
@@ -72,3 +76,14 @@ rob_traffic_light(data_rob2, tool = "ROB2", psize = 10)
 $$ MRR(\%) = \frac{\text{Corrected Rate}_\text{post.sleep} }{\text{Corrected Rate}_\text{pre.sleep} } \ \times \ 100 \% \tag{4}$$
 
 where $$ \text{Corrected Rate}(\%) = \frac{\text{Hit} - \text{False Alarm}} {\text{Hit}} \ \times \ 100 \%$$
+
+```{r}
+library(tfprobability)
+tfd_truncated_cauchy(
+  0.13,
+  0.5,
+  0,
+  99,
+  name = "TruncatedCauchy"
+)
+```
