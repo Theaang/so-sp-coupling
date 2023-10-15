@@ -76,14 +76,3 @@ rob_traffic_light(data_rob2, tool = "ROB2", psize = 10)
 $$ MRR(\%) = \frac{\text{Corrected Rate}_\text{post.sleep} }{\text{Corrected Rate}_\text{pre.sleep} } \ \times \ 100 \% \tag{4}$$
 
 where $$ \text{Corrected Rate}(\%) = \frac{\text{Hit} - \text{False Alarm}} {\text{Hit}} \ \times \ 100 \%$$
-
-```{r}
-library(tfprobability)
-tfd_truncated_cauchy(
-  0.13,
-  0.5,
-  0,
-  99,
-  name = "TruncatedCauchy"
-)
-```
