@@ -1991,7 +1991,7 @@ load("preprocessing_fun.RData")
 ## Import source data from Zhang 2020
 Nicolas2022_sleep_raw <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Nicolas2022/Spindles2share.csv")
 Nicolas2022_mem_raw <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Nicolas2022/offlingains2share.csv")
-Nicolas2022_cp_raw <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Nicolas2022/mvl_pp_epoch30_2share.csv")
+Nicolas2022_phase <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Nicolas2022/Nicolas_phase.csv")
 ```
 
 ```{r}
@@ -2044,27 +2044,6 @@ Nicolas2022_mem_wide <- Nicolas2022_mem_wide |>
 ```
 
 ```{r}
-Nicolas2022_cp <- data.frame()
-
-for (row in Nicolas2022_cp_raw) {
-  row_data <- str_split_fixed(row, ";", 4)
-  Nicolas2022_cp <- rbind(Nicolas2022_cp, as.data.frame(row_data))
-}
-colnames <- c('mean_vector_length', 'preferred_phase', 'subject', 'channel')
-colnames(Nicolas2022_cp) <- colnames
-
-Nicolas2022_cp_wide <- Nicolas2022_cp |>
-  pivot_wider(names_from = channel,
-              values_from = c('mean_vector_length', 'preferred_phase'),
-              id_cols = subject)
-#> view(Nicolas2022_cp_wide)
-
-Nicolas2022_cp_wide <- Nicolas2022_cp_wide |>
-  mutate(across(-subject, as.numeric))
-#> view(Nicolas2022_cp_wide)
-```
-
-```{r}
 Nicolas2022_sleep_wide <- Nicolas2022_sleep_wide |>
   rowwise() |>
 mutate(
@@ -2075,6 +2054,18 @@ mutate(
 amp <- remove_outliers(Nicolas2022_sleep_wide, scale_columns = c("Favg", "Cavg", "POavg"), memory = Nicolas2022_mem_wide)
 Nicolas2022_sleep_wide <- amp$sleepchar_rem
 Nicolas2022_mem_wide <- amp$memory_rem
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+## Calculate the circular linear correlation
+view(Nicolas2022_phase)
+view(Nicolas2022_mem_wide)
+nicolas_phase <- circular_cor(Nicolas2022_phase$phase, Nicolas2022_mem_wide$notreact_retention)
+rownames(nicolas_phase) <- 'Correlation'
+knitr::kable(nicolas_phase,format ="markdown",caption ="Nicolas 2022 CP Phase and Memory Circlin R Correlation Table")
 ```
 
 ```{r}
@@ -2115,6 +2106,94 @@ Niknazar2015_phase <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-
 niknazar_phase <- circular_cor(Niknazar2015_phase$phase, Niknazar2015_phase$improvement)
 rownames(niknazar_phase) <- 'Correlation'
 knitr::kable(niknazar_phase,format ="markdown",caption ="Niknazar 2015 CP Phase and Memory Circlin R Correlation Table")
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
+```
+
+## Perrault2019
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Import source data from Perrault 2019
+Perrault2019 <- read.csv("https://raw.githubusercontent.com/Theaang/so-sp-coupling/main/Paper/Perrault2019/Sourcedata/Perrault_data.csv")
+```
+
+```{r}
+Perrault2019 <- Perrault2019[-c(14, 17), ]
+Perrault2019 <- Perrault2019 |>
+  mutate(N2_Fz_phase = deg2rad(CFC_N2_Fz_prefangle_dg - 270),
+         N2_Pz_phase = deg2rad(CFC_N2_Pz_prefangle_dg - 270),
+         N3_Fz_phase = deg2rad(CFC_N3_Fz_prefangle_dg - 270),
+         N3_Pz_phase = deg2rad(CFC_N3_Pz_prefangle_dg - 270))
+```
+
+```{r}
+variables <- c("N2_Fz_phase", "N2_Pz_phase", "N3_Fz_phase", "N3_Pz_phase")
+es_phase <- data.frame()
+for (var in variables) {
+ev_phase <- circular_cor(Perrault2019[[var]], Perrault2019$MEMO_overnight_MOminusEV_accuracy_CminusW)
+es_phase <- rbind(es_phase, ev_phase)
+}
+rownames(es_phase) <- c("N2 Frontal", "N2 Parietal", "N3 Frontal", "N3 Parietal")
+knitr::kable(es_phase, format = "markdown", caption = "Perrault 2019 CP Phase and Memory Circular Linear Correlation Table")
+
+mean(circular(Perrault2019$N2_Fz_phase, units = "radians", template = "geographics"))
+favstats(Perrault2019$N2_Fz_phase)
+mean(circular(Perrault2019$N2_Pz_phase, units = "radians", template = "geographics"))
+mean(circular(Perrault2019$N3_Fz_phase, units = "radians", template = "geographics"))
+mean(circular(Perrault2019$N3_Pz_phase, units = "radians", template = "geographics"))
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+Perrault2019_amp <- remove_outliers(Perrault2019, scale_columns = c("Spindle_Fz_N2_PeakAmp_uV", "Spindle_Pz_N2_PeakAmp_uV", "Spindle_Fz_N3_PeakAmp_uV", "Spindle_Pz_N3_PeakAmp_uV"))
+
+# Calculate correlation coefficients between spindles and memory in each channel location
+cor_amp <- c(
+  "N2 Frontal" = cor(Perrault2019_amp$Spindle_Fz_N2_PeakAmp_uV ~ Perrault2019_amp$MEMO_overnight_MOminusEV_accuracy_CminusW, use = "complete"),
+  "N2 Parietal" = cor(Perrault2019_amp$Spindle_Pz_N2_PeakAmp_uV ~ Perrault2019_amp$MEMO_overnight_MOminusEV_accuracy_CminusW, use = "complete"),
+  "N3 Frontal" = cor(Perrault2019_amp$Spindle_Fz_N3_PeakAmp_uV ~ Perrault2019_amp$MEMO_overnight_MOminusEV_accuracy_CminusW, use = "complete"),
+  "N3 Parietal" = cor(Perrault2019_amp$Spindle_Pz_N3_PeakAmp_uV ~ Perrault2019_amp$MEMO_overnight_MOminusEV_accuracy_CminusW, use = "complete"))
+
+# Create the table
+cortable("Perrault 2019", 2, flip = FALSE, "Correlation" = cor_amp)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+Perrault2019_str <- remove_outliers(Perrault2019, scale_columns = c("CFC_N2_Fz_SI_mag", "CFC_N2_Pz_SI_mag", "CFC_N3_Fz_SI_mag", "CFC_N3_Pz_SI_mag"))
+
+# Calculate correlation coefficients between spindles and memory in each channel location
+cor_str <- c(
+  "N2 Frontal" = cor(Perrault2019_str$CFC_N2_Fz_SI_mag ~ Perrault2019_str$MEMO_overnight_MOminusEV_accuracy_CminusW, use = "complete"),
+  "N2 Parietal" = cor(Perrault2019_str$CFC_N2_Pz_SI_mag ~ Perrault2019_str$MEMO_overnight_MOminusEV_accuracy_CminusW, use = "complete"),
+  "N3 Frontal" = cor(Perrault2019_str$CFC_N3_Fz_SI_mag ~ Perrault2019_str$MEMO_overnight_MOminusEV_accuracy_CminusW, use = "complete"),
+  "N3 Parietal" = cor(Perrault2019_str$CFC_N3_Pz_SI_mag ~ Perrault2019_str$MEMO_overnight_MOminusEV_accuracy_CminusW, use = "complete"))
+
+# Create the table
+cortable("Perrault 2019", 3, flip = FALSE, "Correlation" = cor_str)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Remove all unused variables
+rm(list = ls())
+load("preprocessing_fun.RData")
 ```
 
 # IV. References
