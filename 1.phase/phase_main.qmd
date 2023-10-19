@@ -39,6 +39,7 @@ library(metaDigitise)
 library(ICC)
 library(wildmeta)
 library(future)
+library(rstan)
 library(brms)
 library(tidybayes)
 library(ggplot2)
@@ -70,8 +71,12 @@ iters = 5000
 warmups = 1000
 
 ## Set prior
-prior_phasemain <- c(prior(normal(0,1), class = "Intercept", lb = 0),
-prior(cauchy(0,0.5), class = "sd"))
+prior_family <- c(
+  prior_phasemain <- c(prior(normal(0,1), class = "Intercept", lb = 0),
+                       prior(cauchy(0,0.5), class = "sd")),
+  prior_phasemod <- c(prior(normal(0,1), class = "Intercept", lb = 0),
+                      prior(normal(0,1), class = "b"),
+                      prior(cauchy(0,0.5), class = "sd")))
 ```
 
 ```{r}
@@ -128,8 +133,8 @@ z_phase <- escalc(measure = "ZCOR", ri = es, ni = n.y, data = phase_final)
 phase_final = phase_final |>
   mutate(
     esz = z_phase$yi,
-    vi = z_phase$vi,
-    se = sqrt(z_phase$vi))
+    vi = (z_phase$vi)*(1-2/pi),
+    se = sqrt(z_phase$vi)*sqrt(1-2/pi))
 ```
 
 # Main Model
@@ -138,12 +143,13 @@ phase_final = phase_final |>
 #| warning: false
 #| message: false
 #| include: false
-## Using brm to run the bayesian analysis
+## Using brms package to run the bayesian analysis
+## Compiling Stan program
 ## Warning: The simulation is anticipated to last for more than 5 minutes
 ## Warning: Before running, please ensure you have a stable network connection
 phase_main <- 
   brm(
-    esz|se(se) ~ 1 + (1|studyid/esid),
+    esz | se(se) + trunc(lb = -0.5) ~ 1 + (1|studyid/esid),
     data = phase_final,
     family = gaussian(),
     prior = prior_phasemain,
@@ -290,6 +296,24 @@ forest_plot_F0 <- forest_plot_F0 + ggtitle("Forest Plot for Studies on Coupling 
 forest_plot_F0
 ```
 
+```{r}
+Posterior <- as_draws_df(phase_main)
+
+F0_intercept_pp_update <- 
+  ggplot(Posterior) +
+  geom_density(aes(b_Intercept), fill="#FC4E07", color="#FC4E07",alpha=0.4) + 
+  geom_density(aes(prior_Intercept), fill="steelblue", color="steelblue",alpha=0.6) +
+  xlab('Intercept') +
+  ggtitle("Prior-Posterior Comparison Plots for Phase Main Model") +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5, size=15))
+
+F0_intercept_pp_update
+```
+```{r}
+hypothesis(phase_main, "studyid__Intercept > 0", class = "sd", seed = 42)
+plot(phase_main)
+```
+
 ```{r, fig.height=20}
 #| warning: false
 #| message: false
@@ -395,4 +419,240 @@ viz_sunset(
 regtest(esz, vi, se, n.y, studyid, data = phase_final,
         model="rma", predictor="sei")
 ranktest(esz, vi, se, studyid, data = phase_final)
+```
+
+# M1: Task Model
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Using brms package to run the bayesian analysis
+## Compiling Stan program
+## Warning: The simulation is anticipated to last for more than 5 minutes
+## Warning: Before running, please ensure you have a stable network connection
+phase_m1 <- 
+  brm(
+    esz | se(se) + trunc(lb = 0) ~ 1 + mem_type.y + (1|studyid/esid),
+    data = phase_final,
+    family = gaussian(),
+    prior = prior_family$prior_phasemod,
+    sample_prior = T,
+    iter = iters, 
+    save_pars = save_pars(all = TRUE), 
+    control = list(adapt_delta = 0.999, max_treedepth = 15),
+    chains = chains,
+    warmup = warmups
+    )
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Check simulation results and plot graph for posterior predictive checks
+pp_check(phase_m1, ndraws = 100)
+summary(phase_m1)
+```
+
+# M2: Age Model
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Using brms package to run the bayesian analysis
+## Compiling Stan program
+## Warning: The simulation is anticipated to last for more than 5 minutes
+## Warning: Before running, please ensure you have a stable network connection
+##phase_m1 <- 
+##  brm(
+##    esz | se(se) + trunc(lb = 0) ~ 1 + mem_type.y + (1|studyid/esid),
+##    data = phase_final,
+##    family = gaussian(),
+##    prior = prior_phasemain,
+##    sample_prior = T,
+##    iter = iters, 
+##    save_pars = save_pars(all = TRUE), 
+##    control = list(adapt_delta = 0.99, max_treedepth = 15),
+##    chains = chains,
+##    warmup = warmups
+ ##   )
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Check simulation results and plot graph for posterior predictive checks
+## pp_check(phase_m1, ndraws = 100)
+## summary(phase_m1)
+```
+
+# M3: Spindle Model
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Using brms package to run the bayesian analysis
+## Compiling Stan program
+## Warning: The simulation is anticipated to last for more than 5 minutes
+## Warning: Before running, please ensure you have a stable network connection
+phase_final$sleepsp_type <- phase_final$sp_type
+
+phase_m3 <- 
+  brm(
+    esz | se(se) + trunc(lb = 0) ~ 1 + sleepsp_type + (1|studyid/esid),
+    data = phase_final,
+    family = gaussian(),
+    prior = prior_family$prior_phasemod,
+    sample_prior = T,
+    iter = iters, 
+    save_pars = save_pars(all = TRUE), 
+    control = list(adapt_delta = 0.999, max_treedepth = 15),
+    chains = chains,
+    warmup = 2000
+    )
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Check simulation results and plot graph for posterior predictive checks
+summary(phase_m3)
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Check MCMC Convergence by trace plots
+mcmc_plot(phase_m3, type = "trace")
+```
+
+# M4: Channel Model
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Using brms package to run the bayesian analysis
+## Compiling Stan program
+## Warning: The simulation is anticipated to last for more than 5 minutes
+## Warning: Before running, please ensure you have a stable network connection
+phase_m4 <- 
+  brm(
+    esz | se(se) + trunc(lb = 0) ~ 1 + channel_cl + (1|studyid/esid),
+    data = phase_final,
+    family = gaussian(),
+    prior = prior_family$prior_phasemod,
+    iter = iters, 
+    save_pars = save_pars(all = TRUE), 
+    control = list(adapt_delta = 0.9999, max_treedepth = 20),
+    chains = chains,
+    warmup = warmups
+    )
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Check simulation results and plot graph for posterior predictive checks
+pp_check(phase_m4, ndraws = 100)
+summary(phase_m4)
+```
+
+# M5: Sleep Stage Model
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Using brms package to run the bayesian analysis
+## Compiling Stan program
+## Warning: The simulation is anticipated to last for more than 5 minutes
+## Warning: Before running, please ensure you have a stable network connection
+phase_m5 <- 
+  brm(
+    esz | se(se) + trunc(lb = 0) ~ 1 + sleep_stg + (1|studyid/esid),
+    data = phase_final,
+    family = gaussian(),
+    prior = prior_phasemain,
+    sample_prior = T,
+    iter = iters, 
+    save_pars = save_pars(all = TRUE), 
+    control = list(adapt_delta = 0.99, max_treedepth = 15),
+    chains = chains,
+    warmup = warmups
+    )
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Check simulation results and plot graph for posterior predictive checks
+pp_check(phase_m5, ndraws = 100)
+summary(phase_m5)
+```
+
+# M6: Sleep Phase Model
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Using brms package to run the bayesian analysis
+## Compiling Stan program
+## Warning: The simulation is anticipated to last for more than 5 minutes
+## Warning: Before running, please ensure you have a stable network connection
+phase_m6 <- 
+  brm(
+    esz | se(se) + trunc(lb = 0) ~ 1 + sleep_con + (1|studyid/esid),
+    data = phase_final,
+    family = gaussian(),
+    prior = prior_phasemain,
+    sample_prior = T,
+    iter = 10000, 
+    save_pars = save_pars(all = TRUE), 
+    control = list(adapt_delta = 0.99, max_treedepth = 15),
+    chains = 6,
+    warmup = warmups
+    )
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Check simulation results and plot graph for posterior predictive checks
+summary(phase_m6)
+```
+
+# Mf: Full Model
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+## Using brms package to run the bayesian analysis
+## Compiling Stan program
+## Warning: The simulation is anticipated to last for more than 5 minutes
+## Warning: Before running, please ensure you have a stable network connection
+phase_mf <- 
+  brm(
+    esz | se(se) ~ 1 + sleep_con + sleep_stg + sleepsp_type + mem_type.y + channel_cl + (1|studyid/esid),
+    data = phase_final,
+    family = gaussian(),
+    prior = prior_phasemain,
+    sample_prior = T,
+    iter = iters, 
+    save_pars = save_pars(all = TRUE), 
+    control = list(adapt_delta = 0.99, max_treedepth = 15),
+    chains = chains,
+    warmup = warmups
+    )
+```
+
+```{r}
+#| warning: false
+#| message: false
+## Check simulation results and plot graph for posterior predictive checks
+summary(phase_mf)
 ```
