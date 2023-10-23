@@ -49,6 +49,7 @@ library(stringr)
 library(forcats)
 library(brmstools)
 library(bayesplot)
+library(cmdstanr)
 
 ## Optimize multi-core utilization for increasing iteration speed
 options(mc.cores = parallel::detectCores())
@@ -149,7 +150,7 @@ phase_final = phase_final |>
 ## Warning: Before running, please ensure you have a stable network connection
 phase_main <- 
   brm(
-    esz | se(se) + trunc(lb = -0.5) ~ 1 + (1|studyid/esid),
+    esz | se(se) + trunc(lb = 0, ub = 100) ~ 1 + (1|studyid/esid),
     data = phase_final,
     family = gaussian(),
     prior = prior_phasemain,
@@ -203,7 +204,7 @@ geweke.plot(phase_posterior[, 1:3])
 ## Warning: Before running, please ensure you have a stable network connection
 phase_main_iter2 <- 
   brm(
-    esz|se(se) ~ 1 + (1|studyid/esid),
+    esz|se(se) + trunc(lb = 0, ub = 100) ~ 1 + (1|studyid/esid),
     data = phase_final,
     family = gaussian(),
     prior = prior_phasemain,
@@ -249,12 +250,13 @@ stanplot(phase_main, type = "dens")
 ```{r, fig.height=20, fig.width=16}
 #| warning: false
 #| message: false
+library(gridExtra)
 #extract data from the intercepts-only model:
 study.draws <- spread_rvars(phase_main, `r_studyid`[`esid`, ], b_Intercept) %>%
   mutate(b_Intercept = `r_studyid` + b_Intercept) %>%
   mutate(esid = 1:20) %>%
   mutate(esid = as.factor(esid)) %>%
-  select(esid, b_Intercept)
+  select(esid, b_Intercept)                      
 
 pooled.effect.draws <- spread_rvars(phase_main, b_Intercept) %>%
   mutate(esid = "Pooled Effect") %>%
@@ -274,11 +276,34 @@ forest.data <- forest.data %>%
 forest.data <- forest.data %>%
   mutate(fill_color = ifelse(row_number() == n(), "Pooled", fill_color))
 
-forest_plot_F0 <- ggplot(aes(dist = b_Intercept, y = relevel(esid, "Pooled Effect", after = Inf)), 
-                         data = forest.data) +
+view(forest.data)
+forestone <- forest.data[1:11, ]
+foresttwo <- forest.data[12:21, ]
+forestsumone <- forest.data.summary[1:11, ]
+forestsumtwo <- forest.data.summary[12:21, ]
+view(forest.data.summary)
+forest_plot_F0_col1 <- ggplot(aes(dist = b_Intercept, y = relevel(esid, "Pooled Effect", after = Inf)), 
+                         data = forestone) +
   stat_dist_halfeye(aes(fill = fill_color), scale = 0.7, alpha = 0.8, size = 0.8, show_point = T) +
   geom_vline(xintercept = 0.0, color = "black", size = 0.3, linetype = "dotted") +
-  geom_text(data = mutate_if(forest.data.summary, is.numeric, round, 2), aes(label = glue("{b_Intercept} [{.lower}, {.upper}]"), x = Inf), hjust = "inward", size = 6.8) +
+  geom_text(data = mutate_if(forestsumone, is.numeric, round, 2), aes(label = glue("{b_Intercept} [{.lower}, {.upper}]"), x = Inf), hjust = "inward", size = 6.8) +
+  labs(x = "placeholder", y = element_blank()) +
+  scale_x_continuous("Effect Size (Fisher's z)", limits = c(0, 1), breaks = c(0.25, 0.5, 0.75)) +
+  scale_fill_manual(values = c("Declarative" = "#A6CDE7", "Motor" = "#F9CD88", "Pooled" = "gray")) +
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 20),
+        axis.text.x = element_text(size = 20),
+        axis.text.y = element_text(size = 20)) +
+  ggtitle("Forest Plot for Studies on Coupling Phase Main Model") +
+  theme(plot.title = element_text(hjust = 0.5, size = 24)) +
+  scale_y_discrete(labels = rev(c(main$studyinfo[11:21], "Pooled Effect")))
+
+forest_plot_F0_col2 <- ggplot(aes(dist = b_Intercept, y = relevel(esid, "Pooled Effect", after = Inf)), 
+                         data = foresttwo) +
+  stat_dist_halfeye(aes(fill = fill_color), scale = 0.7, alpha = 0.8, size = 0.8, show_point = T) +
+  geom_vline(xintercept = 0.0, color = "black", size = 0.3, linetype = "dotted") +
+  geom_text(data = mutate_if(forestsumtwo, is.numeric, round, 2), aes(label = glue("{b_Intercept} [{.lower}, {.upper}]"), x = Inf), hjust = "inward", size = 6.8) +
   labs(x = "placeholder", y = element_blank()) +
   scale_x_continuous("Effect Size (Fisher's z)", limits = c(0, 1), breaks = c(0.25, 0.5, 0.75)) +
   scale_fill_manual(values = c("Declarative" = "#A6CDE7", "Motor" = "#F9CD88", "Pooled" = "gray")) +
@@ -289,11 +314,12 @@ forest_plot_F0 <- ggplot(aes(dist = b_Intercept, y = relevel(esid, "Pooled Effec
         legend.title = element_text(size = 0),
         axis.title.x = element_text(size = 20),
         axis.text.x = element_text(size = 20),
-        axis.text.y = element_text(size = 20))  
-forest_plot_F0 <- forest_plot_F0 + ggtitle("Forest Plot for Studies on Coupling Phase Main Model") +
+        axis.text.y = element_text(size = 20)) +
+  ggtitle("Forest Plot for Studies on Coupling Phase Main Model") +
   theme(plot.title = element_text(hjust = 0.5, size = 24)) +
-  scale_y_discrete(labels = rev(c(main$studyinfo[1:20], "Pooled Effect")))
-forest_plot_F0
+  scale_y_discrete(labels = rev(c(main$studyinfo[1:10], "Pooled Effect")))
+
+grid.arrange(forest_plot_F0_col1, forest_plot_F0_col2, ncol = 2, widths = c(1.2, 1))
 ```
 
 ```{r}
@@ -433,7 +459,7 @@ ranktest(esz, vi, se, studyid, data = phase_final)
 ## Warning: Before running, please ensure you have a stable network connection
 phase_m1 <- 
   brm(
-    esz | se(se) + trunc(lb = 0) ~ 1 + mem_type.y + (1|studyid/esid),
+    esz | se(se) + trunc(lb = 0, ub = 100) ~ 1 + mem_type.y + (1|studyid/esid),
     data = phase_final,
     family = gaussian(),
     prior = prior_family$prior_phasemod,
@@ -501,7 +527,7 @@ phase_final$sleepsp_type <- phase_final$sp_type
 
 phase_m3 <- 
   brm(
-    esz | se(se) + trunc(lb = 0) ~ 1 + sleepsp_type + (1|studyid/esid),
+    esz | se(se) + trunc(lb = 0, ub = 100) ~ 1 + sleepsp_type + (1|studyid/esid),
     data = phase_final,
     family = gaussian(),
     prior = prior_family$prior_phasemod,
@@ -540,13 +566,13 @@ mcmc_plot(phase_m3, type = "trace")
 ## Warning: Before running, please ensure you have a stable network connection
 phase_m4 <- 
   brm(
-    esz | se(se) + trunc(lb = 0) ~ 1 + channel_cl + (1|studyid/esid),
+    esz | se(se) + trunc(lb = 0, ub = 100) ~ 1 + channel_cl + (1|studyid/esid),
     data = phase_final,
     family = gaussian(),
     prior = prior_family$prior_phasemod,
     iter = iters, 
     save_pars = save_pars(all = TRUE), 
-    control = list(adapt_delta = 0.9999, max_treedepth = 20),
+    control = list(adapt_delta = 0.99, max_treedepth = 15),
     chains = chains,
     warmup = warmups
     )
@@ -572,7 +598,7 @@ summary(phase_m4)
 ## Warning: Before running, please ensure you have a stable network connection
 phase_m5 <- 
   brm(
-    esz | se(se) + trunc(lb = 0) ~ 1 + sleep_stg + (1|studyid/esid),
+    esz | se(se) + trunc(lb = 0, ub = 100) ~ 1 + sleep_stg + (1|studyid/esid),
     data = phase_final,
     family = gaussian(),
     prior = prior_phasemain,
@@ -605,15 +631,15 @@ summary(phase_m5)
 ## Warning: Before running, please ensure you have a stable network connection
 phase_m6 <- 
   brm(
-    esz | se(se) + trunc(lb = 0) ~ 1 + sleep_con + (1|studyid/esid),
+    esz | se(se) + trunc(lb = 0, ub = 100) ~ 1 + sleep_con + (1|studyid/esid),
     data = phase_final,
     family = gaussian(),
     prior = prior_phasemain,
     sample_prior = T,
-    iter = 10000, 
+    iter = iters, 
     save_pars = save_pars(all = TRUE), 
     control = list(adapt_delta = 0.99, max_treedepth = 15),
-    chains = 6,
+    chains = chains,
     warmup = warmups
     )
 ```
